@@ -1,0 +1,11 @@
+#include<stdio.h>
+#include<math.h>
+int Input(),Determinante(int,int,int),Parabola(int,int,int,int,int,int),Recta(int,int,int,int,int),Circu(int,int,int,int,int),Hiper(int,int,int,int,int,int,int),Elipse(int,int,int,int,int,int,int);
+void Show(int),InputData(int*,int*,int*,int*,int*,int*),InputData2(int*,int*),Cuadrante(int,int),Function();
+int main(){
+	Function();
+}
+int Input(){
+	int x;
+	scanf("%d",&x);
+
