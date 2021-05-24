@@ -1,3 +1,5 @@
+//Code by NakanoMiku13
+//Find more interesting codes in https://github.com/NakanoMiku13
 #include<stdio.h>
 #include<stdlib.h>
 //Function that recieve the data as int
