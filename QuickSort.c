@@ -20,29 +20,20 @@ void Swap(int* a,int* b){
 //In this case we start from the right to the left, and ask, is 6 higher than 6?, in this case the answer is no, because they are the same, so, there will finish the cycle 
 //Then we go from the left to the right and check, is 5 less than 6?, in this case, the answer is yes, so we continue, and now we ask, is 8 higher than 8?, the answer is no, so in here will finish the cycle
 //Now, both cycles finished, now we swap that values, and we have this new array 5 6 8 4 3 7 2 8
-void Sort(int* Array,int n, int j,int i,int pivot){
+void Sort(int* Array, int j,int i,int pivot){
 	while(j>i){
 		while(Array[j]>pivot) j--;
 		while(Array[i]<pivot) i++;
 		Swap(&Array[i],&Array[j]);
 	}
 }
-//This function only checks if the array is order or not
-int IsOrder(int* Array,int n){
-	int i=0;
-	for(;i<n;i++){
-		if((i+1)!=n){ if(Array[i]>Array[i+1]) return 1;}
-		else break;
-	}
-	return 0;
-}
 //In this function we invoke the Sort function that I have explained, but in this case we are going to repeat it while the array is in disorder, just changin the pivot
 void QuickSort(int* Array,int n,int j,int i){
-	int pivot=Array[0];
-	do{
-		Sort(Array,n,j,i,pivot);
-		pivot=Array[0];
-	}while(IsOrder(Array,n)!=0);
+	int pivot=Array[0],k;
+	for(k=0;k<n+1;k++){
+		pivot=Array[k];
+		Sort(Array,j,i,pivot);
+	}
 }
 //The main function
 int main(){
