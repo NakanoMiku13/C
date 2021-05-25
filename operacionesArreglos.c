@@ -63,7 +63,7 @@ void ShowBinary(int x,int pos,int r){
 void Function(){
 	int n,x,r,pos;
 	int* Array;
-	Array=(int*)malloc(sizeof(int)*(n+3));
+	Array=(int*)malloc(sizeof(int)*(53));
 	InputElementsArray(&n);
 	FillArray(n,Array);
 	Show(Array,n);
