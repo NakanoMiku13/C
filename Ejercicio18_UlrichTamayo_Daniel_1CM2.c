@@ -28,6 +28,7 @@ int Size(char* Array){
 void Reverse(char* Array){
 	int n=Size(Array),i;
 	for(i=0;i<n-1;i++) Swap(&Array[i],&Array[n-1-i]);
+	printf("Reverse: %s\n",Array);
 }
 int Vowels(char* Array){
 	int n=Size(Array),i,c=0,j=0;
