@@ -26,8 +26,14 @@ int Size(char* Array){
 	return strlen(Array);
 }
 void Reverse(char* Array){
-	int n=Size(Array),i;
-	for(i=0;i<n-1;i++) Swap(&Array[i],&Array[n-1-i]);
+	int n=Size(Array),i=0,j=n-1;
+	while(j!=i){
+		if(j==i || j-1==i) break;
+		Swap(&Array[i],&Array[j]);
+		i++;
+		j--;
+	}
+	if(n%2==0) Swap(&Array[n/2-1],&Array[n/2]);
 	printf("Reverse: %s\n",Array);
 }
 int Vowels(char* Array){
