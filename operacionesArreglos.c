@@ -33,8 +33,8 @@ int Search(int* Array, int x,int n,int* pos){
 	}
 	return 0;
 }
-void ShowSearch(int x,int pos,int r){
-	if(x==1) printf("The value was found at position %d, and the value was: %d\n",pos,r);
+void ShowSearch(int r,int pos,int x){
+	if(r==1) printf("The value was found at position %d, and the value was: %d\n",pos,x);
 	else printf("The value was not found in the array\n");
 }
 void Swap(int* a,int* b){
