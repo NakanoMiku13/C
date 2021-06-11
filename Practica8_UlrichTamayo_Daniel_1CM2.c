@@ -21,8 +21,8 @@ int main(){
 char** Create(int n,int m){
 	char** a;
 	int i;
-	a=(char**)malloc(sizeof(char*)*t);
-	for(i=0;i<n;i++) a[i]=(char*)malloc(sizeof(char)*t);
+	a=(char**)malloc(sizeof(char*)*(t*2));
+	for(i=0;i<n;i++) a[i]=(char*)malloc(sizeof(char)*(t*2));
 	return a;
 }
 char Input(){
