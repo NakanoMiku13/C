@@ -2,7 +2,7 @@
 #include<stdlib.h>
 int** Set(int);
 int Input();
-void Fill(int**,int), Calc(int,int,int*,int**);
+void Fill(int**,int), Calc(int,int,int*,int**),Show(int,int*);
 int main(){
 	int n=Input(),i,k;
 	int** a;
@@ -11,6 +11,10 @@ int main(){
 	int* b;
 	b=(int*)malloc(sizeof(int)*(n+2));
 	for(i=0;i<n;i++) Calc(n,i,b,a);
+	Show(n,b);
+}
+void Show(int n,int* b){
+	int i;
 	for(i=0;i<n;i++) printf("%d ",b[i]);
 }
 int Input(){
