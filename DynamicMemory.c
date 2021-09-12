@@ -1,3 +1,6 @@
+//Code by NakanoMiku13
+//See more at http://github.com/NakanoMiku13
+//DynamicMemory
 #include<stdio.h>
 #include<stdlib.h>
 //Typedef instruction are useful to declare multiple data types of any name that we want to declare
