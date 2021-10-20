@@ -12,22 +12,40 @@ struct Stack{
     Function (*ctr)(Stack*),(*Add)(Stack*,int),(*Pop)(Stack*);
 };
 Function Stack_Add(Stack*,int),Stack_ctr(Stack*),Stack_Pop(Stack*);
-void SetT1(Stack*),Print(Stack),Swap(Stack*,Stack*),MoveTo(Stack*,Stack*),Hanoi(Stack*,Stack*,Stack*);
+void SetT1(Stack*,int),Print(Stack),MoveTo(Stack*,Stack*),Hanoi(int,Stack*,Stack*,Stack*),SetSt(Stack*);
+int Input();
 int main(){
+    int n=Input();
     Stack Tower1,Tower2,Tower3;
-    Tower1.Add=Tower2.Add=Tower3.Add=Stack_Add;
-    Tower1.Pop=Tower2.Pop=Tower3.Pop=Stack_Pop;
-    Tower1.ctr=Tower2.ctr=Tower3.ctr=Stack_ctr;
-    Tower1.ctr(&Tower1);
-    Tower2.ctr(&Tower2);
-    Tower3.ctr(&Tower3);
-    SetT1(&Tower1);
-    Hanoi(&Tower1, &Tower2, &Tower3);
-    Print(Tower1);
-    printf("\n");
+    SetSt(&Tower1); SetSt(&Tower2); SetSt(&Tower3);
+    SetT1(&Tower1,n);
+    Hanoi(n,&Tower1,&Tower3,&Tower2);
     Print(Tower3);
+    printf("\n");
 }
-void Hanoi(Stack* T1, Stack* T2, Stack* T3){
+void SetSt(Stack* p){
+    p->Add=Stack_Add;
+    p->Pop=Stack_Pop;
+    p->ctr=Stack_ctr;
+    p->ctr(p);
+}
+int Input(){
+    int x;
+    scanf("%d",&x);
+    return x;
+}
+void Hanoi(int n,Stack* From, Stack* To,Stack* Free){
+    if(n>0){
+        // 3     From=1 To=3 Free=2
+        // 2     From=1 To=2 Free=3       (Move de 1 a 2   N=2, From=1, To=2, Free=3)
+        // 1     From=1 To=3 Free=2       (Move de 1 a 3   N=1, From=1, To=3, Free=2)
+        // 0
+        //Move 1 a 2    n=2, 1, 2, 3 
+        //
+        Hanoi(n-1,From,Free,To);
+        MoveTo(From,To);
+        Hanoi(n-1,Free,To,From);
+    }
 }
 void Print(Stack t){
     while(t.size>0){
@@ -35,8 +53,8 @@ void Print(Stack t){
         t.Pop(&t);
     }
 }
-void SetT1(Stack* T){
-    int i=5;
+void SetT1(Stack* T,int n){
+    int i=n;
     while(i>0){
         T->Add(T,i);
         i--;
@@ -46,13 +64,6 @@ void MoveTo(Stack* From,Stack* To){
     int x=From->Head->Value;
     From->Pop(From);
     To->Add(To,x);
-}
-void Swap(Stack* T1, Stack* T2){
-    int x=T1->Head->Value,y=T2->Head->Value;
-    T1->Pop(T1);
-    T2->Pop(T2);
-    T1->Add(T1,y);
-    T2->Add(T2,x);
 }
 Function Stack_ctr(Stack *self){
     self->Head=(Node)malloc(sizeof(Node));
