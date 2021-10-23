@@ -84,7 +84,6 @@ Function Table_Add(Table *Self,int value) {
             for(i=0;i<Self->_ccols;i++,_MoveBack=_MoveBack->Next);
             for(i=0;i<Self->_crows;i++,_MoveBack=_MoveBack->Bottom);
             for(i=0;i<Self->_cback;i++,_MoveUp=_MoveUp->Back);
-            //printf("Move %d\n",_MoveUp->Value);
             if(Self->_crows>0){
                 for(i=0;i<Self->_crows-1;i++,_MoveUp=_MoveUp->Bottom);
                 for(i=0;i<Self->_ccols;i++,_MoveUp=_MoveUp->Next);
