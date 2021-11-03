@@ -20,8 +20,8 @@ int main(){
     int i;
     tree.ctr(&tree);
     srand(time(NULL));
-    for(i=0;i<10;i++){
-        int x=rand()%1000;
+    for(i=0;i<7000000;i++){
+        int x=rand()%10000;
         printf("%d ",x);
         tree.Add(&tree,x);
     }
