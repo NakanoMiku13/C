@@ -4,36 +4,49 @@
 #define m 6
 typedef struct Tree Tree,*FunctionsTree;
 typedef struct List List,*FunctionsList;
+typedef struct Table Table,*FunctionTable;
 typedef struct Pair Pair;
 struct Pair{
     int x;
     int y;
 };
+struct Node{
+    int Value;
+    struct Node *Next,*Prev,*Top,*Bottom,*Front,*Back;
+};
 struct NodeList{
     Pair coordinates;
     struct NodeList *Next;
+};
+struct NodeTree{
+    int value;
+    Pair Coordinates;
+    struct Node* Right,*Left,*Up,*Down;
 };
 struct List{
     struct NodeList *Head;
     size_t Size;
     FunctionsList (*ctr)(List* self),(*Add)(List* self,Pair),(*Print)(List* self),(*PopLast)(List* self);
 };
-struct Node{
-    int value;
-    Pair Coordinates;
-    struct Node* Right,*Left,*Up,*Down;
+struct Table{
+    struct Node *Head;
+    size_t _size,_cols,_rows,_ccols,_crows,_cback,_back;
+    FunctionTable (*Ctr)(Table *),(*Add)(Table *,int),(*Print)(Table *),(*SumFace)(Table*,int);
 };
 struct Tree{
-    struct Node* root;
+    struct NodeTree* root;
     FunctionsTree (*ctr)(Tree* self),(*Add)(Tree* self,int position,struct NodeList* node,int Value);
 };
-void CheckLeftRight(int x,int y,int** table,List* visited,List* pending),InitializeList(List* self);
+void CheckLeftRight(int x,int y,int** table,List* visited,List* pending),InitializeList(List* self),InitializeTable(Table* self);
 FunctionsList List_ctr(List* self),List_Add(List* self,Pair coordinates),List_Pop(List* self),List_Print(List* self);
 FunctionsTree Tree_ctr(Tree* self),Tree_Add(Tree* self,int position,struct NodeList* node,int Value);
+FunctionTable Table_Ctr(Table *),Table_Add(Table *,int),Table_Print(Table *),Table_SumFace(Table*,int);
 int main(){
     List positionList,Pending;
+    Table table;
     InitializeList(&positionList);
     InitializeList(&Pending);
+    InitializeTable(&table);
     int** Face = (int**)malloc(sizeof(int*)*n+1);
     int Faces[10][10]={
         {1,1,1,1,1,1},//0
@@ -54,7 +67,6 @@ int main(){
     }
     CheckLeftRight(6,3,Face,&positionList,&Pending);
     positionList.Print(&positionList);
-    printf("dd");
 }
 void InitializeList(List* s){
     s->ctr=List_ctr;
@@ -62,6 +74,12 @@ void InitializeList(List* s){
     s->Print=List_Print;
     s->PopLast=List_Pop;
     s->ctr(s);
+}
+void InitializeTable(Table* s){
+    s->Ctr=Table_Ctr;
+    s->Add=Table_Add;
+    s->Print=Table_Print;
+    s->Ctr(s);
 }
 int IsVisited(List* list,int x,int y){
     struct NodeList* check=list->Head;
@@ -90,7 +108,7 @@ void CheckLeftRight1(int x,int y,int** table,List* pnd,List* visited){
 }
 void Down(int y,int x,int** table,List* lst,List* pnd){
     if(y<n && table[y][x]!=1){
-        if(table[y][x]==2) return;
+        if(table[y][x]==2){ printf("Exit found at x=%d y=%d\n",x,y); return;}
         if((table[y][x]==0 && IsVisited(lst,x,y)==0) || table[y][x]==3){
             Down(y+1,x,table,lst,pnd);
         }
@@ -109,7 +127,7 @@ void Down(int y,int x,int** table,List* lst,List* pnd){
 }
 void Up(int y,int x,int** table,List* lst,List* pnd){
     if(y>0 && table[y][x]!=1){
-        if(table[y][x]==2) return;
+        if(table[y][x]==2){ printf("Exit found at x=%d y=%d\n",x,y); return;}
         if((table[y][x]==0 && IsVisited(lst,x,y)==0) || table[y][x]==3){
             Up(y-1,x,table,lst,pnd);
         }
@@ -145,7 +163,7 @@ void CheckUpDown(int x,int y,List* pnd,int** table, List* visited){
 }
 void Right(int y,int x,int** table,List* lst,List* pnd){
     if(x<m){
-        if(table[y][x]==2) return;
+        if(table[y][x]==2){ printf("Exit found at x=%d y=%d\n",x,y); return;}
         if((table[y][x]==0 && IsVisited(lst,x,y)==0) || table[y][x]==3){
             Right(y,x+1,table,lst,pnd);
         }
@@ -165,7 +183,7 @@ void Right(int y,int x,int** table,List* lst,List* pnd){
 void Left(int y,int x,int** table,List* lst,List* pnd){
     if(x>0){
         if(table[y][x]==0) CheckUpDown(x,y,pnd,table,lst);
-        if(table[y][x]==2) return;
+        if(table[y][x]==2){ printf("Exit found at x=%d y=%d\n",x,y); return;}
         if((table[y][x]==0 && IsVisited(lst,x,y)==0) || table[y][x]==3){
             Left(y,x-1,table,lst,pnd);
         }
@@ -266,10 +284,10 @@ FunctionsList List_Pop(List* self){
     }
 }
 FunctionsTree Tree_ctr(Tree* self){
-    self->root=(struct Node*)malloc(sizeof(struct Node));
+    self->root=(struct NodeTree*)malloc(sizeof(struct NodeTree));
 }
 FunctionsTree Tree_Add(Tree* self,int position,struct NodeList* node,int Value){
-    struct Node* new = (struct Node*)malloc(sizeof(struct Node));
+    struct NodeTree* new = (struct NodeTree*)malloc(sizeof(struct NodeTree));
     new->value=Value;
     new->Coordinates=node->coordinates;
     if(self->root=NULL){
@@ -279,5 +297,123 @@ FunctionsTree Tree_Add(Tree* self,int position,struct NodeList* node,int Value){
             //case 1: //Right 
                 
         }
+    }
+}
+FunctionTable Table_Ctr(Table *Self){
+    Self->Head=(struct Node*)malloc(sizeof(struct Node));
+    Self->_size=Self->_cols=Self->_rows=Self->_ccols=Self->_crows=Self->_cback=Self->_back=0;
+}
+FunctionTable Table_Add(Table *Self,int value) {
+    struct Node* tmp;
+    tmp=(struct Node*)malloc(sizeof(struct Node));
+    tmp->Value=value;
+    if(Self->_size>0){
+        if(Self->_ccols<Self->_cols && Self->_crows==0 && Self->_cback==0){
+            struct Node* _Move=Self->Head;
+            int i=0;
+            for(i=0;i<Self->_ccols-1;i++,_Move=_Move->Next);
+            tmp->Prev=_Move;
+            _Move->Next=tmp;
+            Self->_ccols++;
+        }else if(Self->_ccols<Self->_cols && Self->_cback==0){
+            struct Node *_MoveUp=Self->Head;
+            struct Node *_Move=Self->Head;
+            int i=0;
+            if(Self->_rows>0) for(i=0;i<Self->_crows-1;i++,_MoveUp=_MoveUp->Bottom);
+            for(i=0;i<Self->_ccols;i++,_MoveUp=_MoveUp->Next);
+            for(i=0;i<Self->_crows;i++,_Move=_Move->Bottom);
+            for(i=0;i<Self->_ccols-1;i++,_Move=_Move->Next);
+            tmp->Top=_MoveUp;
+            _MoveUp->Bottom=tmp;
+            tmp->Prev=_Move;
+            _Move->Next=tmp;
+            Self->_ccols++;
+        }else if(Self->_ccols<Self->_cols && Self->_cback<Self->_back){
+            struct Node *_MoveRight=Self->Head,*_MoveUp=Self->Head,*_MoveBack=Self->Head,*test=Self->Head;
+            int i=0;
+            for(i=0;i<Self->_cback-1;i++,_MoveBack=_MoveBack->Back);
+            for(i=0;i<Self->_ccols;i++,_MoveBack=_MoveBack->Next);
+            for(i=0;i<Self->_crows;i++,_MoveBack=_MoveBack->Bottom);
+            for(i=0;i<Self->_cback;i++,_MoveUp=_MoveUp->Back);
+            if(Self->_crows>0){
+                for(i=0;i<Self->_crows-1;i++,_MoveUp=_MoveUp->Bottom);
+                for(i=0;i<Self->_ccols;i++,_MoveUp=_MoveUp->Next);
+            }
+            for(i=0;i<Self->_cback;i++,_MoveRight=_MoveRight->Back);
+            for(i=0;i<Self->_ccols-1;i++,_MoveRight=_MoveRight->Next);
+            if(Self->_crows>0) for(i=0;i<Self->_crows;i++,_MoveRight=_MoveRight->Bottom);
+            tmp->Prev = _MoveRight;
+            _MoveRight->Next=tmp;
+            tmp->Top=_MoveUp;
+            _MoveUp->Bottom=tmp;
+            tmp->Front=_MoveBack;
+            _MoveBack->Back=tmp;
+            Self->_ccols++;
+        }else if(Self->_crows<Self->_rows-1 && Self->_crows==0 && Self->_cback==0){
+            struct Node* _Move=Self->Head;
+            tmp->Top=Self->Head;
+            _Move->Bottom=tmp;
+            _Move=_Move->Bottom;
+            Self->_ccols=0;
+            Self->_crows++;
+            Self->_ccols++;
+        }else if(Self->_crows<Self->_rows-1 && Self->_cback==0){
+            struct Node* _Move=Self->Head;
+            int i=0;
+            for(i=0;i<Self->_crows;i++,_Move=_Move->Bottom);
+            tmp->Top=_Move;
+            _Move->Bottom=tmp;
+            Self->_ccols=1;
+            Self->_crows++;
+        }else if(Self->_crows<Self->_rows-1 && Self->_cback!=0 && Self->_cback<Self->_back){
+            struct Node* _Move=Self->Head,*_Move2=Self->Head;
+            int i=0;
+            for(i=0;i<Self->_crows;i++,_Move=_Move->Bottom);
+            for(i=0;i<Self->_cback;i++,_Move=_Move->Back);
+            for(i=0;i<=Self->_crows;i++,_Move2=_Move2->Bottom);
+            for(i=0;i<Self->_cback-1;i++,_Move2=_Move2->Back);
+            tmp->Top=_Move;
+            _Move->Bottom=tmp;
+            tmp->Front=_Move2;
+            _Move2->Back=tmp;
+            Self->_crows++;
+            Self->_ccols=1;
+        }else if(Self->_cback!=0 && Self->_cback<Self->_back-1){
+            struct Node* _Move=Self->Head;
+            int i=0;
+            for(i=0;i<Self->_cback;i++,_Move=_Move->Back);
+            tmp->Front=_Move;
+            _Move->Back=tmp;
+            Self->_ccols=1;
+            Self->_crows=0;
+            Self->_cback++;
+        }else if(Self->_cback==0 && Self->_crows<Self->_rows){
+            struct Node* _Move=Self->Head;
+            tmp->Front=_Move;
+            _Move->Back=tmp;
+            Self->_ccols=1;
+            Self->_crows=0;
+            Self->_cback++;
+        }
+    }else{
+        Self->Head=tmp;
+        Self->_ccols++;
+    }
+
+    Self->_size++;
+}
+FunctionTable Table_Print(Table *Self){
+    struct Node* _Move=Self->Head,*_Move2=Self->Head,*_Move3=Self->Head;
+    int i=0,j=0,k=0;
+    for(i=0;i<Self->_back;i++,_Move3=_Move3->Back){
+        _Move2=_Move3;
+        for(j=0;j<Self->_rows;j++,_Move2=_Move2->Bottom){
+            _Move=_Move2;
+            for(k=0;k<Self->_cols;k++,_Move=_Move->Next){
+                printf("%d ",_Move->Value);
+            }
+            printf("\n");
+        }
+        printf("\n");
     }
 }
