@@ -1,5 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
+#define n 8
+#define m 6
 typedef struct Tree Tree,*FunctionsTree;
 typedef struct List List,*FunctionsList;
 typedef struct Pair Pair;
@@ -16,40 +18,6 @@ struct List{
     size_t Size;
     FunctionsList (*ctr)(List* self),(*Add)(List* self,Pair),(*Print)(List* self),(*PopLast)(List* self);
 };
-FunctionsList List_Print(List* self){
-    struct NodeList *move=self->Head;
-    int i;
-    if(self->Size>0)
-    for(i=0;i<self->Size && move!=NULL;i++,move=move->Next){
-        printf("Y:%d X:%d\n",move->coordinates.y,move->coordinates.x);
-    }
-}
-FunctionsList List_ctr(List* self){
-    self->Head=(struct NodeList*)malloc(sizeof(struct NodeList));
-    self->Size=0;
-}
-FunctionsList List_Add(List* self,Pair coordinates){
-    struct NodeList* new = (struct NodeList*)malloc(sizeof(struct NodeList));
-    new->coordinates=coordinates;
-    if(self->Size==0){
-        self->Head=new;
-    }else{
-        struct NodeList* Move=self->Head;
-        int i;
-        for(i=0;i<self->Size-1;i++,Move=Move->Next);
-        Move->Next=new;
-    }
-    self->Size++;
-}
-FunctionsList List_Pop(List* self){
-    if(self->Size>0){
-        int i=0;
-        struct NodeList* Move = self->Head;
-        for(i=0;i<self->Size-1;i++,Move=Move->Next);
-        free(Move);
-        self->Size--;
-    }
-}
 struct Node{
     int value;
     Pair Coordinates;
@@ -59,50 +27,21 @@ struct Tree{
     struct Node* root;
     FunctionsTree (*ctr)(Tree* self),(*Add)(Tree* self,int position,struct NodeList* node,int Value);
 };
-FunctionsTree Tree_ctr(Tree* self){
-    self->root=(struct Node*)malloc(sizeof(struct Node));
-}
-FunctionsTree Tree_Add(Tree* self,int position,struct NodeList* node,int Value){
-    struct Node* new = (struct Node*)malloc(sizeof(struct Node));
-    new->value=Value;
-    new->Coordinates=node->coordinates;
-    if(self->root=NULL){
-        self->root=new;
-    }else{
-        switch(position){
-            //case 1: //Right 
-                
-        }
-    }
-}
-void SearchExit(int,int,int**,List*);
-void CheckLeftRight(int,int,int**,List*,List*);
-int n=8,m=6;
+void CheckLeftRight(int x,int y,int** table,List* visited,List* pending),InitializeList(List* self);
+FunctionsList List_ctr(List* self),List_Add(List* self,Pair coordinates),List_Pop(List* self),List_Print(List* self);
+FunctionsTree Tree_ctr(Tree* self),Tree_Add(Tree* self,int position,struct NodeList* node,int Value);
 int main(){
     List positionList,Pending;
-    Pending.ctr=positionList.ctr=List_ctr;
-    Pending.Add=positionList.Add=List_Add;
-    Pending.Print=positionList.Print=List_Print;
-    Pending.PopLast=positionList.PopLast=List_Pop;
-    positionList.ctr(&positionList);
-    Pending.ctr(&Pending);
+    InitializeList(&positionList);
+    InitializeList(&Pending);
     int** Face = (int**)malloc(sizeof(int*)*n+1);
-    /*int Faces[10][10]={
-        {2},
-        {0},
-        {0},
-        {0},
-        {0},
-        {0},
-        {1}
-    };*/
     int Faces[10][10]={
         {1,1,1,1,1,1},//0
-        {1,0,0,0,1,1},//1
-        {1,0,1,0,0,1},//2
-        {1,0,1,1,0,1},//3
-        {1,0,1,0,0,1},//4
-        {1,0,0,1,0,1},//5
+        {1,0,0,0,0,1},//1
+        {1,0,0,0,0,1},//2
+        {1,0,0,0,0,1},//3
+        {1,0,0,0,0,1},//4
+        {1,0,0,0,0,1},//5
         {1,3,1,0,0,1},//6
         {1,1,1,2,1,1}//7
        //0 1 2 3 4 5
@@ -113,11 +52,16 @@ int main(){
             Face[i][j] = Faces[i][j];
         }
     }
-    //SearchExit(6,1,Face,&positionList);
     CheckLeftRight(6,3,Face,&positionList,&Pending);
     positionList.Print(&positionList);
     printf("dd");
-    //Pending.Print(&Pending);
+}
+void InitializeList(List* s){
+    s->ctr=List_ctr;
+    s->Add=List_Add;
+    s->Print=List_Print;
+    s->PopLast=List_Pop;
+    s->ctr(s);
 }
 int IsVisited(List* list,int x,int y){
     struct NodeList* check=list->Head;
@@ -130,17 +74,14 @@ int IsVisited(List* list,int x,int y){
 void CheckLeftRight1(int x,int y,int** table,List* pnd,List* visited){
     Pair pending;
     if(table[y][x+1]==0 && table[y][x-1]==0 && IsVisited(visited,x+1,y)==0  && IsVisited(visited,x-1,y)==0){
-        printf("Found Right and left at x=%d y=%d\n",x,y);
         pending.x=x+1; pending.y=y;
         pnd->Add(pnd,pending);
         pending.x=x-1; pending.y=y;
         pnd->Add(pnd,pending);
     }else if(table[y][x+1]==0 && IsVisited(visited,x+1,y)==0){
-        printf("Found Right at x=%d y=%d\n",x,y);
         pending.x=x+1; pending.y=y;
         pnd->Add(pnd,pending);
     }else if(table[y][x-1]==0 && IsVisited(visited,x-1,y)==0){
-        printf("Found Left at x=%d y=%d\n",x,y);
         pending.x=x-1; pending.y=y;
         pnd->Add(pnd,pending);
     }else{
@@ -188,17 +129,14 @@ void Up(int y,int x,int** table,List* lst,List* pnd){
 void CheckUpDown(int x,int y,List* pnd,int** table, List* visited){
     Pair pending;
     if(table[y+1][x]==0 && table[y-1][x]==0 && IsVisited(visited,x,y-1)==0 && IsVisited(visited,x,y+1)==0){
-        printf("Found up and down at x=%d y=%d\n",x,y);
         pending.x=x; pending.y=y-1;
         pnd->Add(pnd,pending);
         pending.x=x; pending.y=y+1;
         pnd->Add(pnd,pending);
     }else if(table[y-1][x]==0 && IsVisited(visited,x,y-1)==0){
-        printf("Found Up at x=%d y=%d\n",x,y);
         pending.x=x; pending.y=y-1;
         pnd->Add(pnd,pending);
     }else if(table[y+1][x]==0 && IsVisited(visited,x,y+1)==0){
-        printf("Found Down at x=%d y=%d\n",x,y);
         pending.x=x; pending.y=y+1;
         pnd->Add(pnd,pending);
     }else{
@@ -262,7 +200,6 @@ void CheckCross(int x,int y,int** table,List* pnd){
 }
 void CheckLeftRight(int y,int x,int** table,List* lst,List* pnd){
     //Checking if we have a pending position or coordinate
-    printf("%d pnd\n",pnd->Size);
     if(pnd->Size>0){
         printf("Pending list %d\n",pnd->Size);
         struct NodeList* move = pnd->Head;
@@ -294,6 +231,53 @@ void CheckLeftRight(int y,int x,int** table,List* lst,List* pnd){
         CheckLeftRight(y,x,table,lst,pnd);
     }
 }
-void SearchExit(int y,int x,int** table,List* list){
-    
+FunctionsList List_Print(List* self){
+    struct NodeList *move=self->Head;
+    int i;
+    if(self->Size>0)
+    for(i=0;i<self->Size && move!=NULL;i++,move=move->Next){
+        printf("Y:%d X:%d\n",move->coordinates.y,move->coordinates.x);
+    }
+}
+FunctionsList List_ctr(List* self){
+    self->Head=(struct NodeList*)malloc(sizeof(struct NodeList));
+    self->Size=0;
+}
+FunctionsList List_Add(List* self,Pair coordinates){
+    struct NodeList* new = (struct NodeList*)malloc(sizeof(struct NodeList));
+    new->coordinates=coordinates;
+    if(self->Size==0){
+        self->Head=new;
+    }else{
+        struct NodeList* Move=self->Head;
+        int i;
+        for(i=0;i<self->Size-1;i++,Move=Move->Next);
+        Move->Next=new;
+    }
+    self->Size++;
+}
+FunctionsList List_Pop(List* self){
+    if(self->Size>0){
+        int i=0;
+        struct NodeList* Move = self->Head;
+        for(i=0;i<self->Size-1;i++,Move=Move->Next);
+        free(Move);
+        self->Size--;
+    }
+}
+FunctionsTree Tree_ctr(Tree* self){
+    self->root=(struct Node*)malloc(sizeof(struct Node));
+}
+FunctionsTree Tree_Add(Tree* self,int position,struct NodeList* node,int Value){
+    struct Node* new = (struct Node*)malloc(sizeof(struct Node));
+    new->value=Value;
+    new->Coordinates=node->coordinates;
+    if(self->root=NULL){
+        self->root=new;
+    }else{
+        switch(position){
+            //case 1: //Right 
+                
+        }
+    }
 }
