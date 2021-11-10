@@ -37,36 +37,109 @@ struct Tree{
     struct NodeTree* root;
     FunctionsTree (*ctr)(Tree* self),(*Add)(Tree* self,int position,struct NodeList* node,int Value);
 };
-void SearchExit(int x,int y,int** table,List* visited,List* pending),InitializeList(List* self),InitializeTable(Table* self);
+void SearchExit(int x,int y,int** table,List* visited,List* pending),Initialize(List*,List*,Table*);
+int** CreateFace(Table* table);
 FunctionsList List_ctr(List* self),List_Add(List* self,Pair coordinates),List_Pop(List* self),List_Print(List* self);
 FunctionsTree Tree_ctr(Tree* self),Tree_Add(Tree* self,int position,struct NodeList* node,int Value);
 FunctionTable Table_Ctr(Table *),Table_Add(Table *,int),Table_Print(Table *),Table_SumFace(Table*,int);
 int main(){
     List positionList,Pending;
     Table table;
-    InitializeList(&positionList);
-    InitializeList(&Pending);
-    InitializeTable(&table);
-    int** Face = (int**)malloc(sizeof(int*)*n+1);
-    int Faces[10][10]={
-        {1,1,1,1,1,1},//0
-        {1,0,0,0,0,1},//1
-        {1,0,0,0,0,1},//2
-        {1,0,0,0,0,1},//3
-        {1,0,0,0,0,1},//4
-        {1,0,0,0,0,1},//5
-        {1,3,1,0,0,1},//6
-        {1,1,1,2,1,1}//7
-       //0 1 2 3 4 5
-    };
-    for(int i=0;i<n;i++) Face[i] = (int*)malloc(sizeof(int)*m+1);
-    for(int i=0;i<n;i++){
-        for(int j=0;j<m;j++){
-            Face[i][j] = Faces[i][j];
-        }
-    }
+    int** Face;
+    Initialize(&positionList,&Pending,&table);
+    Face=CreateFace(&table);
     SearchExit(6,3,Face,&positionList,&Pending);
     positionList.Print(&positionList);
+}
+void AsignTable(Table* s){
+    int i,j,k;
+    s->_cols=s->_rows=s->_back=n;
+    int fill[10][10][10]={
+        {{1,1,1,1,1,1,1,1},
+        {1,0,1,0,1,0,0,2},
+        {1,0,0,0,0,0,1,1},
+        {1,0,1,0,1,0,1,1},   
+        {1,0,0,0,0,0,0,1},
+        {1,0,1,1,1,0,1,1},
+        {1,3,1,0,0,0,0,1},
+        {1,1,1,1,1,1,1,1}},
+
+        {{2,0,1,1,0,0,0,1},
+        {0,1,1,1,1,1,1,0},
+        {0,1,1,1,1,1,1,0},
+        {0,1,1,1,1,1,1,0},
+        {0,1,1,1,1,1,1,0},
+        {0,1,1,1,1,1,1,0},
+        {0,1,1,1,1,1,1,0},
+        {1,0,0,0,1,0,0,1}},
+        
+
+        {{1,0,1,0,0,1,0,1},
+        {1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1},
+        {0,1,1,1,1,1,1,1},
+        {0,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,0},
+        {1,0,1,0,0,0,0,1}},
+        
+        {{1,0,1,0,0,0,1,1},
+        {0,1,1,1,1,1,1,0},
+        {0,1,1,1,1,1,1,0},
+        {0,1,1,1,1,1,1,0},
+        {1,1,1,1,1,1,1,0},
+        {0,1,1,1,1,1,1,0},
+        {1,1,1,1,1,1,1,0},
+        {1,0,1,1,0,1,1,1}},
+        
+        {{1,0,0,0,0,0,5,1},
+        {0,1,1,1,1,1,1,0},
+        {1,1,1,1,1,1,1,1},
+        {0,1,1,1,1,1,1,0},
+        {0,1,1,1,1,1,1,1},
+        {0,1,1,1,1,1,1,0},
+        {0,1,1,1,1,1,1,1},
+        {2,0,1,0,0,0,0,1}},
+
+        {{1,0,0,0,0,1,0,1},
+        {0,1,1,1,1,1,1,0},
+        {0,1,1,1,1,1,1,1},
+        {1,1,1,1,1,1,1,0},
+        {0,1,1,1,1,1,1,0},
+        {1,1,1,1,1,1,1,1},
+        {0,1,1,1,1,1,1,0},
+        {1,1,1,0,1,0,1,1}},
+
+        {{1,0,1,0,0,0,1,1},
+        {0,1,1,1,1,1,1,0},
+        {1,1,1,1,1,1,1,0},
+        {0,1,1,1,1,1,1,1},
+        {0,1,1,1,1,1,1,0},
+        {0,1,1,1,1,1,1,0},
+        {0,1,1,1,1,1,1,0},
+        {1,0,0,0,0,0,0,1}},
+
+        {{1,1,1,1,1,1,1,1},
+        {1,1,0,0,1,0,0,1},
+        {1,0,1,0,0,0,0,1},
+        {1,0,0,0,1,1,0,1},
+        {1,1,0,1,0,0,0,1},
+        {1,0,0,0,0,1,0,1},
+        {1,0,1,0,1,0,0,2},
+        {1,2,1,1,1,1,1,1}}
+
+    };
+    for(i=0;i<n;i++) for(j=0;j<n;j++) for(k=0;k<n;k++) s->Add(s,fill[i][j][k]);
+    s->Print(s);
+}
+int** CreateFace(Table* s){
+    int** Face = (int**)malloc(sizeof(int*)*n+1),i,j;
+    for(i=0;i<n;i++) Face[i] = (int*)malloc(sizeof(int)*m+1);
+    for(i=0;i<n;i++){
+        for(int j=0;j<m;j++){
+            //Face[i][j] = Faces[i][j];
+        }
+    }
 }
 void InitializeList(List* s){
     s->ctr=List_ctr;
@@ -80,6 +153,12 @@ void InitializeTable(Table* s){
     s->Add=Table_Add;
     s->Print=Table_Print;
     s->Ctr(s);
+}
+void Initialize(List* positionList, List* PendingPositionList,Table* table){
+    InitializeList(positionList);
+    InitializeList(PendingPositionList);
+    InitializeTable(table);
+    AsignTable(table);
 }
 int IsVisited(List* list,int x,int y){
     struct NodeList* check=list->Head;
