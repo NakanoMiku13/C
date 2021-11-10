@@ -37,7 +37,7 @@ struct Tree{
     struct NodeTree* root;
     FunctionsTree (*ctr)(Tree* self),(*Add)(Tree* self,int position,struct NodeList* node,int Value);
 };
-void CheckLeftRight(int x,int y,int** table,List* visited,List* pending),InitializeList(List* self),InitializeTable(Table* self);
+void SearchExit(int x,int y,int** table,List* visited,List* pending),InitializeList(List* self),InitializeTable(Table* self);
 FunctionsList List_ctr(List* self),List_Add(List* self,Pair coordinates),List_Pop(List* self),List_Print(List* self);
 FunctionsTree Tree_ctr(Tree* self),Tree_Add(Tree* self,int position,struct NodeList* node,int Value);
 FunctionTable Table_Ctr(Table *),Table_Add(Table *,int),Table_Print(Table *),Table_SumFace(Table*,int);
@@ -65,7 +65,7 @@ int main(){
             Face[i][j] = Faces[i][j];
         }
     }
-    CheckLeftRight(6,3,Face,&positionList,&Pending);
+    SearchExit(6,3,Face,&positionList,&Pending);
     positionList.Print(&positionList);
 }
 void InitializeList(List* s){
@@ -89,7 +89,7 @@ int IsVisited(List* list,int x,int y){
     }
     return 0;
 }
-void CheckLeftRight1(int x,int y,int** table,List* pnd,List* visited){
+void CheckLeftRight(int x,int y,int** table,List* pnd,List* visited){
     Pair pending;
     if(table[y][x+1]==0 && table[y][x-1]==0 && IsVisited(visited,x+1,y)==0  && IsVisited(visited,x-1,y)==0){
         pending.x=x+1; pending.y=y;
@@ -113,7 +113,7 @@ void Down(int y,int x,int** table,List* lst,List* pnd){
             Down(y+1,x,table,lst,pnd);
         }
         if(table[y][x]==0){
-            CheckLeftRight1(x,y,table,pnd,lst);
+            CheckLeftRight(x,y,table,pnd,lst);
             Pair cordvisited;
             cordvisited.x=x;
             cordvisited.y=y;
@@ -132,7 +132,7 @@ void Up(int y,int x,int** table,List* lst,List* pnd){
             Up(y-1,x,table,lst,pnd);
         }
         if(table[y][x]==0){
-            CheckLeftRight1(x,y,table,pnd,lst);
+            CheckLeftRight(x,y,table,pnd,lst);
             Pair cordvisited;
             cordvisited.x=x;
             cordvisited.y=y;
@@ -216,7 +216,7 @@ void CheckCross(int x,int y,int** table,List* pnd){
         pnd->Add(pnd,pending);
     }
 }
-void CheckLeftRight(int y,int x,int** table,List* lst,List* pnd){
+void SearchExit(int y,int x,int** table,List* lst,List* pnd){
     //Checking if we have a pending position or coordinate
     if(pnd->Size>0){
         printf("Pending list %d\n",pnd->Size);
@@ -246,7 +246,7 @@ void CheckLeftRight(int y,int x,int** table,List* lst,List* pnd){
         Down(y+1,x,table,lst,pnd);
     }
     if(pnd->Size>0){
-        CheckLeftRight(y,x,table,lst,pnd);
+        SearchExit(y,x,table,lst,pnd);
     }
 }
 FunctionsList List_Print(List* self){
