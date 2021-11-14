@@ -4,19 +4,24 @@ int Input(),**GenTable(int,int),Line(int,int,int,int,int**),Diagonal(int,int,int
 void FillTable(int,int,int**),NoAttackQueens(int,int,int**),SetQueens(int,int,int,int,int**),SetFirstQueen(int,int,int**);
 size_t Queens=0;
 int main(){
-    printf("Type the rows, and the columns of the table:\n");
-    int n=Input(),m=Input(),**table=GenTable(n,m);
-    FillTable(n,m,table);
-    SetFirstQueen(n,m,table);
-    NoAttackQueens(n,n,table);
-    int i=0,j=0;
-    for(;i<n;i++){
-        for(j=0;j<m;j++){
-            printf("%d ",table[i][j]);
+    int n=Input(),m=n,**table=GenTable(n,m);
+    if(n==1){
+        printf("1");
+    }else if(n>=4){
+        FillTable(n,m,table);
+        //SetFirstQueen(n,m,table);
+        if(n%2==0) table[0][1]=1;
+        NoAttackQueens(n,n,table);
+        int i=0,j=0;
+        for(;i<n;i++){
+            for(j=0;j<m;j++){
+                printf("%d ",table[i][j]);
+            }
+            printf("\n");
         }
-        printf("\n");
+    }else{
+        printf("Not possible\n");
     }
-    printf("It exists %d queens.\n",Queens);
 }
 void SetFirstQueen(int n,int m,int** table){
     printf("Do you want to set the first queen? or I do it?\n1) I want\n2) You choose\nType it down:\n");
@@ -44,8 +49,8 @@ void NoAttackQueens(int n,int m,int** table){
     }
 }
 void SetQueens(int y,int x,int n,int m,int** table){
-    if(Line(y,x,n,m,table)==1  && Diagonal(y,x,n,m,table)==1 && table[y][x]!=2){
-        table[y][x]=2;
+    if(Line(y,x,n,m,table)==1  && Diagonal(y,x,n,m,table)==1 && table[y][x]!=1){
+        table[y][x]=1;
         Queens++;
     }
 }
@@ -73,7 +78,7 @@ int Diagonal(int y,int x,int n,int m,int** table){
     int i=y-1,j=x-1;
     //Checking up left diagonal
     while(i>=0 && j>=0){
-        if(table[i][j]==2){
+        if(table[i][j]==1){
             //Found a queen
             return -1;
         }
@@ -83,7 +88,7 @@ int Diagonal(int y,int x,int n,int m,int** table){
     i=y-1,j=x+1;
     //Checking up right diagonal
     while(i>=0 && j<=m){
-        if(table[i][j]==2){
+        if(table[i][j]==1){
             //Found a queen
             return -1;
         }
@@ -93,7 +98,7 @@ int Diagonal(int y,int x,int n,int m,int** table){
     i=y+1,j=x-1;
     //Checking down left diagonal
     while(i<n && j>=0){
-        if(table[i][j]==2){
+        if(table[i][j]==1){
             //Found a queen
             return -1;
         }
@@ -103,7 +108,7 @@ int Diagonal(int y,int x,int n,int m,int** table){
     i=y+1,j=x+1;
     //Checking down right diagonal
     while(i<n && j<m){
-        if(table[i][j]==2){
+        if(table[i][j]==1){
             //Found a queen
             return -1;
         }
@@ -117,7 +122,7 @@ int Line(int y,int x,int n,int m,int** table){
     //Cheking rows
     int i=x-1;
     while(i>=0){
-        if(table[y][i]==2){
+        if(table[y][i]==1){
             //Found a queen
             return -1;
         }
@@ -125,7 +130,7 @@ int Line(int y,int x,int n,int m,int** table){
     }
     i=x+1;
     while(i<n){
-        if(table[y][i]==2){
+        if(table[y][i]==1){
             //Found a queen
             return -1;
         }
@@ -134,7 +139,7 @@ int Line(int y,int x,int n,int m,int** table){
     //Checking cols
     int j=y-1;
     while(j>=0){
-        if(table[j][x]==2){
+        if(table[j][x]==1){
             //Found a queen
             return -1;
         }
@@ -142,7 +147,7 @@ int Line(int y,int x,int n,int m,int** table){
     }
     j=y+1;
     while(j<m){
-        if(table[j][x]==2){
+        if(table[j][x]==1){
             //Found a queen
             return -1;
         }
@@ -150,11 +155,4 @@ int Line(int y,int x,int n,int m,int** table){
     }
     //On the line there is no queen
     return 1;
-}
-int Search(int x,int y,int n,int m){
-    int i=x,j=y;
-    //Up
-    for(;i<n;i++){
-
-    }
 }

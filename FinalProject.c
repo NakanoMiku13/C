@@ -26,7 +26,7 @@ struct NodeTree{
 struct List{
     struct NodeList *Head;
     size_t Size;
-    FunctionsList (*ctr)(List* self),(*Add)(List* self,Pair),(*Print)(List* self),(*PopLast)(List* self),(*Clear)(List* self);
+    FunctionsList (*ctr)(List* self),(*Add)(List* self,Pair),(*Print)(List* self),(*PopLast)(List* self),(*Clear)(List* self),(*OrderByHigher)(List* self,char coordinate),(*OrderByLower)(List* self,char coordinate);
 };
 struct Table{
     struct Node *Head;
@@ -36,20 +36,20 @@ struct Table{
 };
 struct Tree{
     struct NodeTree* root;
-    FunctionsTree (*ctr)(Tree* self),(*Add)(Tree* self,int position,struct NodeList* node,int Value);
+    FunctionsTree (*ctr)(Tree* self),(*AddList)(List* pstlist,Pair Initial,int Face);
 };
-void SearchExit(int x,int y,int** table,List* visited,List* pending,Pair* exit),Initialize(List*,List*,Table*),SetFaces(int x,int y,int Fn,Table* table,List* visited,List* pending,Pair* exit);
+void SearchExit(int x,int y,int** table,List* visited,List* pending,Pair* exit),Initialize(List*,List*,Table*,Tree*),SetFaces(int x,int y,int Fn,Table* table,List* visited,List* pending,Pair* exit,Tree* decisionTree);
 int** CreateFace(Table* table,int face);
-FunctionsList List_ctr(List* self),List_Add(List* self,Pair coordinates),List_Pop(List* self),List_Print(List* self),List_Clear(List* self);
-FunctionsTree Tree_ctr(Tree* self),Tree_Add(Tree* self,int position,struct NodeList* node,int Value);
+FunctionsList List_ctr(List* self),List_Add(List* self,Pair coordinates),List_Pop(List* self),List_Print(List* self),List_Clear(List* self),List_OrderByHigher(List* self,char coordinate),List_OrderByLower(List* self,char coordinate);
 FunctionTable Table_Ctr(Table *),Table_Add(Table *,int),Table_Print(Table *),Table_FrontFace(Table*,int**),Table_BackFace(Table*,int**),Table_RightFace(Table*,int**),Table_LeftFace(Table*,int**),Table_TopFace(Table*,int**),Table_BottomFace(Table*,int**);
+FunctionsTree Tree_ctr(Tree* self),Tree_AddList(List* pstlist,Pair Initial,int Face);
 int main(){
     List positionList,Pending;
     Table table;
     Pair ExitCoordinates;
-    Initialize(&positionList,&Pending,&table);
-    SetFaces(1,6,1,&table,&positionList,&Pending,&ExitCoordinates);
-    //positionList.Print(&positionList);
+    Tree decisionTree;
+    Initialize(&positionList,&Pending,&table,&decisionTree);
+    SetFaces(1,6,1,&table,&positionList,&Pending,&ExitCoordinates,&decisionTree);
     printf("x=%d y=%d",ExitCoordinates.x,ExitCoordinates.y);
 }
 void PrintFace(int** table){
@@ -62,7 +62,7 @@ void PrintFace(int** table){
     }
     printf("\n\n");
 }
-void SetFaces(int x,int y,int Fn,Table* table,List* pslst,List* pndlst,Pair* Exit){
+void SetFaces(int x,int y,int Fn,Table* table,List* pslst,List* pndlst,Pair* Exit,Tree* dT){
     int** Face;
     pslst->Clear(pslst);
     pndlst->Clear(pndlst);
@@ -70,6 +70,11 @@ void SetFaces(int x,int y,int Fn,Table* table,List* pslst,List* pndlst,Pair* Exi
     Face[y][x]=3;
     PrintFace(Face);
     SearchExit(y,x,Face,pslst,pndlst,Exit);
+    Pair initial;
+    initial.x=x;
+    initial.y=y;
+    pslst->OrderByLower(pslst,'X');
+    dT->AddList(pslst,initial,1);
     if(Face[Exit->y][Exit->x]==5) printf("Exit Found\n");
     else{
         //Right Face
@@ -77,30 +82,30 @@ void SetFaces(int x,int y,int Fn,Table* table,List* pslst,List* pndlst,Pair* Exi
             int x=0;
             int y=Exit->y;
             Exit->x=0; Exit->y=0;
-            SetFaces(x,y,3,table,pslst,pndlst,Exit);
+            SetFaces(x,y,3,table,pslst,pndlst,Exit,dT);
         //Back Face
         }else if(Exit->x<=n && (Face[Exit->y][Exit->x]==2 || Face[Exit->y][Exit->x+1]==2) && Fn==3){
             int x=Exit->x;
             int y=Exit->y;
             Exit->x=0; Exit->y=0;
-            SetFaces(x,y,2,table,pslst,pndlst,Exit);
+            SetFaces(x,y,2,table,pslst,pndlst,Exit,dT);
         //Bottom Face
         }else if(Exit->y<=n && (Face[Exit->y][Exit->x]==2 || Face[Exit->y+1][Exit->x]==2) && Fn==2){
             int x=Exit->y;
             int y=Exit->x;
             Exit->x=0; Exit->y=0;
-            SetFaces(x,y,6,table,pslst,pndlst,Exit);
+            SetFaces(x,y,6,table,pslst,pndlst,Exit,dT);
         //Left Face
         }else if(Exit->y>=0 && (Face[Exit->y][Exit->x]==2 || Face[Exit->y-1][Exit->x]==2) && Fn>=6){
             int x=Exit->x;
             int y=n-1;
             Exit->x=0; Exit->y=0;
-            SetFaces(x,y,4,table,pslst,pndlst,Exit);
+            SetFaces(x,y,4,table,pslst,pndlst,Exit,dT);
         }else if(Fn==4){
             int x=Exit->x;
             int y=Exit->y;
             Exit->x=0; Exit->y=0;
-            SetFaces(x,y,5,table,pslst,pndlst,Exit);
+            SetFaces(x,y,5,table,pslst,pndlst,Exit,dT);
         }
     }
 }
@@ -222,6 +227,8 @@ void InitializeList(List* s){
     s->Print=List_Print;
     s->PopLast=List_Pop;
     s->Clear=List_Clear;
+    s->OrderByHigher=List_OrderByHigher;
+    s->OrderByLower=List_OrderByLower;
     s->ctr(s);
 }
 void InitializeTable(Table* s){
@@ -236,11 +243,17 @@ void InitializeTable(Table* s){
     s->BottomFace=Table_BottomFace;
     s->Ctr(s);
 }
-void Initialize(List* positionList, List* PendingPositionList,Table* table){
+void InitalizeTree(Tree* s){
+    s->ctr=Tree_ctr;
+    s->AddList=Tree_AddList;
+    s->ctr(s);
+}
+void Initialize(List* positionList, List* PendingPositionList,Table* table,Tree* tree){
     InitializeList(positionList);
     InitializeList(PendingPositionList);
     InitializeTable(table);
     AsignTable(table);
+    InitalizeTree(tree);
 }
 int IsVisited(List* list,int x,int y){
     struct NodeList* check=list->Head;
@@ -471,6 +484,15 @@ void SearchExit(int y,int x,int** table,List* lst,List* pnd,Pair* exit){
         }
     }
 }
+void SwapPairElements(Pair* from,Pair* to){
+    Pair tmp;
+    tmp.x=from->x;
+    tmp.y=from->y;
+    from->x=to->x;
+    from->y=to->y;
+    to->x=tmp.x;
+    to->y=tmp.y;
+}
 FunctionsList List_Print(List* self){
     struct NodeList *move=self->Head;
     int i;
@@ -513,21 +535,59 @@ FunctionsList List_Clear(List* self){
         self->ctr(self);
     }
 }
-FunctionsTree Tree_ctr(Tree* self){
-    self->root=(struct NodeTree*)malloc(sizeof(struct NodeTree));
-}
-FunctionsTree Tree_Add(Tree* self,int position,struct NodeList* node,int Value){
-    struct NodeTree* new = (struct NodeTree*)malloc(sizeof(struct NodeTree));
-    new->value=Value;
-    new->Coordinates=node->coordinates;
-    if(self->root=NULL){
-        self->root=new;
+FunctionsList List_SearchElements(List* self,char coordinate,int number,List* tmpList){
+    int i=0;
+    struct NodeList* move = self->Head;
+    tmpList->Clear(tmpList);
+    if(coordinate=='x' || coordinate=='X'){
+        for(i=0;i<self->Size;i++,move=move->Next){
+            if(move->coordinates.x==number) tmpList->Add(tmpList,move->coordinates);
+        }
     }else{
-        switch(position){
-            //case 1: //Right 
-                
+        for(i=0;i<self->Size;i++,move=move->Next){
+            if(move->coordinates.x==number) tmpList->Add(tmpList,move->coordinates);
         }
     }
+}
+FunctionsList List_OrderByHigher(List* self,char coordinate){
+    int i,j;
+    struct NodeList* move=self->Head,*move2=self->Head;
+    if(coordinate=='x' || coordinate=='X'){
+        for(i=0;i<self->Size-1;i++,move=move->Next){
+            move2=move;
+            for(j=i;j<self->Size;j++,move2=move2->Next){
+                if(move->coordinates.x<move2->coordinates.x) SwapPairElements(&move->coordinates,&move2->coordinates);
+            }
+        }
+    }else{
+        for(i=0;i<self->Size-1;i++,move=move->Next){
+            move2=move;
+            for(j=i;j<self->Size;j++,move2=move2->Next){
+                if(move->coordinates.y<move2->coordinates.y) SwapPairElements(&move->coordinates,&move2->coordinates);
+            }
+        }
+    }
+    move=move2=NULL;
+}
+FunctionsList List_OrderByLower(List* self,char coordinate){
+    int i,j;
+    struct NodeList* move=self->Head,*move2=self->Head;
+    if(coordinate=='x' || coordinate=='X'){
+        for(i=0;i<self->Size-1;i++,move=move->Next){
+            move2=move;
+            for(j=i;j<self->Size;j++,move2=move2->Next){
+                if(move->coordinates.x>move2->coordinates.x) SwapPairElements(&move->coordinates,&move2->coordinates);
+            }
+        }
+    }else{
+        for(i=0;i<self->Size-1;i++,move=move->Next){
+            move2=move;
+            for(j=i;j<self->Size;j++,move2=move2->Next){
+                if(move->coordinates.y>move2->coordinates.y) SwapPairElements(&move->coordinates,&move2->coordinates);
+            }
+        }
+    }
+    move=move2=NULL;
 }
 FunctionTable Table_Ctr(Table *Self){
     Self->Head=(struct Node*)malloc(sizeof(struct Node));
@@ -708,5 +768,63 @@ FunctionTable Table_BottomFace(Table* self,int** table){
         for(j=0;j<self->_back;j++,move2=move2->Back){
             table[i][j]=move2->Value;
         }
+    }
+}
+FunctionsTree Tree_ctr(Tree* self){
+    self->root=(struct NodeTree*)malloc(sizeof(struct NodeTree));
+}
+List SegmentationList(int number,char coordinate,List* initialList){
+    List tmpList;
+    int i=0;
+    struct NodeList* move = initialList->Head;
+    InitializeList(&tmpList);
+    if(coordinate=='x' || coordinate=='X'){
+        for(i=0;i<initialList->Size && move->coordinates.x!=number;i++,move=move->Next);
+        while(i<initialList->Size && number==move->coordinates.x){
+            tmpList.Add(&tmpList,move->coordinates);
+            move=move->Next;
+            i++;
+        }
+    }else if(coordinate=='y' || coordinate=='Y'){
+        for(i=0;i<initialList->Size && move->coordinates.y!=number;i++,move=move->Next);
+        while(i<initialList->Size && number==move->coordinates.y){
+            tmpList.Add(&tmpList,move->coordinates);
+            move=move->Next;
+            i++;
+        }
+    }
+    if(tmpList.Size==0) return SegmentationList(number+1,coordinate,initialList);
+    move=NULL;
+    return tmpList;
+}
+FunctionsTree Tree_AddList(List* pstlist,Pair Initial,int Face){
+    int i;
+    List segmented=SegmentationList(1,'x',pstlist);
+    List pnd;
+    InitializeList(&pnd);
+    pstlist->Print(pstlist);
+    printf("Segmented\n");
+    segmented.OrderByHigher(&segmented,'Y');
+    segmented.Print(&segmented);
+    switch(Face){
+        //front face
+        case 1:
+            break;
+        //right face
+        case 2:
+            break;
+        //left face
+        case 3:
+            break;
+        //back face
+        case 4:
+            break;
+        //top face
+        case 5:
+            break;
+        //bottom face
+        default:
+            break;
+
     }
 }
