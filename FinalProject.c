@@ -21,28 +21,63 @@ struct NodeList{
 struct NodeTree{
     int value;
     Pair Coordinates;
-    struct Node* Right,*Left,*Up,*Down;
+    struct NodeTree* Right,*Left,*Up,*Down;
 };
 struct List{
     struct NodeList *Head;
     size_t Size;
-    FunctionsList (*ctr)(List* self),(*Add)(List* self,Pair),(*Print)(List* self),(*PopLast)(List* self),(*Clear)(List* self),(*OrderByHigher)(List* self,char coordinate),(*OrderByLower)(List* self,char coordinate);
+    FunctionsList (*ctr)(List* self),
+    (*Add)(List* self,Pair),
+    (*Print)(List* self),
+    (*PopLast)(List* self),
+    (*Clear)(List* self),
+    (*OrderByHigher)(List* self,char coordinate),
+    (*OrderByLower)(List* self,char coordinate),
+    (*DeleteRepeated)(List* self);
 };
 struct Table{
     struct Node *Head;
     size_t _size,_cols,_rows,_ccols,_crows,_cback,_back;
-    FunctionTable (*Ctr)(Table *),(*Add)(Table *,int),(*Print)(Table *),(*SumFace)(Table*,int);
-    FunctionTable (*FrontFace)(Table* From,int** To),(*BackFace)(Table* From,int** To),(*RightFace)(Table* From,int** To),(*LeftFace)(Table* From,int** To),(*TopFace)(Table* From,int** To),(*BottomFace)(Table* From,int** To);
+    FunctionTable (*Ctr)(Table *),
+    (*Add)(Table *,int),
+    (*Print)(Table *),
+    (*SumFace)(Table*,int),
+    (*FrontFace)(Table* From,int** To),
+    (*BackFace)(Table* From,int** To),
+    (*RightFace)(Table* From,int** To),
+    (*LeftFace)(Table* From,int** To),
+    (*TopFace)(Table* From,int** To),
+    (*BottomFace)(Table* From,int** To);
 };
 struct Tree{
     struct NodeTree* root;
-    FunctionsTree (*ctr)(Tree* self),(*AddList)(List* pstlist,Pair Initial,int Face);
+    char* Face;
+    size_t size;
+    FunctionsTree (*ctr)(Tree* self),
+    (*AddList)(Tree* self,List* pstlist,Pair Initial,char* Face);
 };
-void SearchExit(int x,int y,int** table,List* visited,List* pending,Pair* exit),Initialize(List*,List*,Table*,Tree*),SetFaces(int x,int y,int Fn,Table* table,List* visited,List* pending,Pair* exit,Tree* decisionTree);
+void SearchExit(int x,int y,int** table,List* visited,List* pending,Pair* exit),
+Initialize(List*,List*,Table*,Tree*),
+SetFaces(int x,int y,int Fn,Table* table,List* visited,List* pending,Pair* exit,Tree* decisionTree);
 int** CreateFace(Table* table,int face);
-FunctionsList List_ctr(List* self),List_Add(List* self,Pair coordinates),List_Pop(List* self),List_Print(List* self),List_Clear(List* self),List_OrderByHigher(List* self,char coordinate),List_OrderByLower(List* self,char coordinate);
-FunctionTable Table_Ctr(Table *),Table_Add(Table *,int),Table_Print(Table *),Table_FrontFace(Table*,int**),Table_BackFace(Table*,int**),Table_RightFace(Table*,int**),Table_LeftFace(Table*,int**),Table_TopFace(Table*,int**),Table_BottomFace(Table*,int**);
-FunctionsTree Tree_ctr(Tree* self),Tree_AddList(List* pstlist,Pair Initial,int Face);
+FunctionsList List_ctr(List* self),
+List_Add(List* self,Pair coordinates),
+List_Pop(List* self),List_Print(List* self),
+List_Clear(List* self),
+List_OrderByHigher(List* self,char coordinate),
+List_OrderByLower(List* self,char coordinate),
+List_DeleteRepeated(List* self);
+FunctionTable Table_Ctr(Table *),
+Table_Add(Table *,int),
+Table_Print(Table *),
+Table_FrontFace(Table*,int**),
+Table_BackFace(Table*,int**),
+Table_RightFace(Table*,int**),
+Table_LeftFace(Table*,int**),
+Table_TopFace(Table*,int**),
+Table_BottomFace(Table*,int**);
+FunctionsTree Tree_ctr(Tree* self),
+Tree_AddList(Tree* self,List* pstlist,Pair Initial,char* Face);
 int main(){
     List positionList,Pending;
     Table table;
@@ -74,7 +109,8 @@ void SetFaces(int x,int y,int Fn,Table* table,List* pslst,List* pndlst,Pair* Exi
     initial.x=x;
     initial.y=y;
     pslst->OrderByLower(pslst,'X');
-    dT->AddList(pslst,initial,1);
+    dT->AddList(dT,pslst,initial,"");
+    printf("Ini tree x: %d y: %d\n",dT->root->Coordinates.x,dT->root->Coordinates.y);
     if(Face[Exit->y][Exit->x]==5) printf("Exit Found\n");
     else{
         //Right Face
@@ -108,6 +144,45 @@ void SetFaces(int x,int y,int Fn,Table* table,List* pslst,List* pndlst,Pair* Exi
             SetFaces(x,y,5,table,pslst,pndlst,Exit,dT);
         }
     }
+}
+int IsVisited(List* list,int x,int y){
+    struct NodeList* check=list->Head;
+    int i=0;
+    for(i=0;i<list->Size;i++,check=check->Next){
+        if(check->coordinates.x==x && check->coordinates.y==y) return 1;
+    }
+    return 0;
+}
+int** CreateFace(Table* s,int face){
+    int** Face = (int**)malloc(sizeof(int*)*n+1),i,j;
+    for(i=0;i<n;i++) Face[i]=(int*)malloc(sizeof(int)*n+1);
+    switch(face){
+        //front face
+        case 1:
+            s->FrontFace(s,Face);
+            break;
+        //back face
+        case 2:
+            s->BackFace(s,Face);
+            break;
+        //right face
+        case 3:
+            s->RightFace(s,Face);
+            break;
+        //left face
+        case 4:
+            s->LeftFace(s,Face);
+            break;
+        //top face
+        case 5:
+            s->TopFace(s,Face);
+            break;
+        //bottom face
+        default:
+            s->BottomFace(s,Face);
+            break;
+    }
+    return Face;
 }
 void AsignTable(Table* s){
     int i,j,k;
@@ -190,37 +265,6 @@ void AsignTable(Table* s){
     for(i=0;i<n;i++) for(j=0;j<n;j++) for(k=0;k<n;k++) s->Add(s,fill[i][j][k]);
     //s->Print(s);
 }
-int** CreateFace(Table* s,int face){
-    int** Face = (int**)malloc(sizeof(int*)*n+1),i,j;
-    for(i=0;i<n;i++) Face[i]=(int*)malloc(sizeof(int)*n+1);
-    switch(face){
-        //front face
-        case 1:
-            s->FrontFace(s,Face);
-            break;
-        //back face
-        case 2:
-            s->BackFace(s,Face);
-            break;
-        //right face
-        case 3:
-            s->RightFace(s,Face);
-            break;
-        //left face
-        case 4:
-            s->LeftFace(s,Face);
-            break;
-        //top face
-        case 5:
-            s->TopFace(s,Face);
-            break;
-        //bottom face
-        default:
-            s->BottomFace(s,Face);
-            break;
-    }
-    return Face;
-}
 void InitializeList(List* s){
     s->ctr=List_ctr;
     s->Add=List_Add;
@@ -229,6 +273,7 @@ void InitializeList(List* s){
     s->Clear=List_Clear;
     s->OrderByHigher=List_OrderByHigher;
     s->OrderByLower=List_OrderByLower;
+    s->DeleteRepeated=List_DeleteRepeated;
     s->ctr(s);
 }
 void InitializeTable(Table* s){
@@ -254,14 +299,6 @@ void Initialize(List* positionList, List* PendingPositionList,Table* table,Tree*
     InitializeTable(table);
     AsignTable(table);
     InitalizeTree(tree);
-}
-int IsVisited(List* list,int x,int y){
-    struct NodeList* check=list->Head;
-    int i=0;
-    for(i=0;i<list->Size;i++,check=check->Next){
-        if(check->coordinates.x==x && check->coordinates.y==y) return 1;
-    }
-    return 0;
 }
 void CheckLeftRight(int x,int y,int** table,List* pnd,List* visited,Pair* exit){
     Pair pending;
@@ -523,7 +560,7 @@ FunctionsList List_Pop(List* self){
         int i=0;
         struct NodeList* Move = self->Head;
         for(i=0;i<self->Size-1;i++,Move=Move->Next);
-        free(Move);
+        Move=NULL;
         self->Size--;
     }
 }
@@ -588,6 +625,21 @@ FunctionsList List_OrderByLower(List* self,char coordinate){
         }
     }
     move=move2=NULL;
+}
+FunctionsList List_DeleteRepeated(List* self){
+    struct NodeList* move=self->Head,*Last;
+    List new;
+    InitializeList(&new);
+    int c=0;
+    for(int i=0;i<self->Size-1;i++,move=move->Next){
+        if(move->coordinates.x==move->Next->coordinates.x && move->coordinates.y!=move->Next->coordinates.y){
+            new.Add(&new,move->coordinates);
+        }else if(move->coordinates.x!=move->Next->coordinates.x && move->coordinates.y==move->Next->coordinates.y){
+            new.Add(&new,move->coordinates);
+        }
+    }
+    new.Add(&new,move->coordinates);
+    self->Head=new.Head;
 }
 FunctionTable Table_Ctr(Table *Self){
     Self->Head=(struct Node*)malloc(sizeof(struct Node));
@@ -772,6 +824,8 @@ FunctionTable Table_BottomFace(Table* self,int** table){
 }
 FunctionsTree Tree_ctr(Tree* self){
     self->root=(struct NodeTree*)malloc(sizeof(struct NodeTree));
+    self->Face=(char*)malloc(sizeof(char)*(20));
+    self->size=0;
 }
 List SegmentationList(int number,char coordinate,List* initialList){
     List tmpList;
@@ -797,34 +851,145 @@ List SegmentationList(int number,char coordinate,List* initialList){
     move=NULL;
     return tmpList;
 }
-FunctionsTree Tree_AddList(List* pstlist,Pair Initial,int Face){
-    int i;
-    List segmented=SegmentationList(1,'x',pstlist);
-    List pnd;
-    InitializeList(&pnd);
-    pstlist->Print(pstlist);
-    printf("Segmented\n");
-    segmented.OrderByHigher(&segmented,'Y');
-    segmented.Print(&segmented);
-    switch(Face){
-        //front face
-        case 1:
-            break;
-        //right face
-        case 2:
-            break;
-        //left face
-        case 3:
-            break;
-        //back face
-        case 4:
-            break;
-        //top face
-        case 5:
-            break;
-        //bottom face
-        default:
-            break;
+struct NodeTree* FoundRoot(struct NodeList* lst, struct NodeTree* root){
+    /*printf("\nDuring root:   x: %d y: %d\n",root->Coordinates.x,root->Coordinates.y);
+    printf("\nDuring head:   x: %d y: %d\n",lst->coordinates.x,lst->coordinates.y);*/
+    if(root->Up==NULL || root->Coordinates.y==lst->coordinates.y) return root;
+    else if(root!=NULL && root->Coordinates.y!=lst->coordinates.y && root->Coordinates.x!=lst->coordinates.x) return FoundRoot(lst,root->Up);
+    else if(root!=NULL && root->Coordinates.y!=lst->coordinates.y && root->Coordinates.x!=lst->coordinates.x) return FoundRoot(lst,root->Down);
+}
+struct NodeTree* FoundLeaf(struct NodeList* head,struct NodeTree* root){
+    printf("\nDuring root:   x: %d y: %d\n",root->Coordinates.x,root->Coordinates.y);
+    printf("\nDuring head:   x: %d y: %d\n",head->coordinates.x,head->coordinates.y);
+    if(root->Coordinates.x==head->coordinates.x) return root;
+    else if(root!=NULL && root->Coordinates.y==head->coordinates.y && root->Coordinates.x<head->coordinates.x) return FoundLeaf(head,root->Right);
+    else if(root!=NULL && root->Coordinates.y==head->coordinates.y && root->Coordinates.x>head->coordinates.x) return FoundLeaf(head,root->Left);
+}
+void SetPosLeaf(struct NodeTree* root,struct NodeList* head){
+    //check down root
+    struct NodeTree* new = (struct NodeTree*) malloc(sizeof(struct NodeTree));
+    new->Coordinates.x=head->coordinates.x;
+    new->Coordinates.y=head->coordinates.y;
+    if(root->Coordinates.x==head->coordinates.x && root->Coordinates.y+1==head->coordinates.y){
+        new->Down=root;
+        root->Up=new;
+        return;
+    }else{
+        if(root->Up!=NULL) SetPosLeaf(root->Up,head);
+    }
+}
+void SetLeafs(struct NodeTree* root,struct NodeList* head){
+    if(head->Next==NULL) return;
+    struct NodeTree* new = (struct NodeTree*) malloc(sizeof(struct NodeTree));
+    new->Coordinates.x=head->coordinates.x;
+    new->Coordinates.y=head->coordinates.y;
+    if(root->Coordinates.x<head->coordinates.x){
+        if(root->Right==NULL){
+            if(root->Coordinates.x+1==head->coordinates.x){
+                new->Left=root;
+                root->Right=new;
+                root=FoundRoot(head->Next,root);
+                SetLeafs(root,head->Next);
+            }else{
 
+            }
+            
+        }else{
+            SetLeafs(root->Right,head);
+        }
+    }else{
+        new->Right=root;
+        if(root->Left==NULL){
+            root->Left=new;
+            root=FoundRoot(head->Next,root);
+            SetLeafs(root,head->Next);
+        }else{
+            SetLeaf(root->Left,head);
+        }
+    }
+}
+void AddTreeNodes(struct NodeList* head,struct NodeTree* root,int c,int i){
+    if(head!=NULL){
+        struct NodeTree* new= (struct NodeTree*)malloc(sizeof(struct NodeTree));
+        if(i!=0){
+            printf("\nPre:  x: %d y: %d\n",root->Coordinates.x,root->Coordinates.y);
+            root=FoundRoot(head,root);
+            printf("Post:  x: %d y: %d\n",root->Coordinates.x,root->Coordinates.y);
+            SetLeafs(root,head);
+        }else if(head->coordinates.y<=root->Coordinates.y && (head->coordinates.x==root->Coordinates.x)){
+            if(c==0 && head->coordinates.y+1==root->Coordinates.y-1 && i==0){
+                new->Coordinates.x=head->coordinates.x;
+                new->Coordinates.y=head->coordinates.y+1;
+                new->Down=root;
+                root->Up=new;
+                struct NodeTree* tmp=(struct NodeTree*)malloc(sizeof(struct NodeTree));
+                tmp->Coordinates.x=head->coordinates.x;
+                tmp->Coordinates.y=head->coordinates.y;
+                tmp->Down=root->Up;
+                root->Up->Up=tmp;
+                if(head->Next!=NULL)
+                AddTreeNodes(head->Next,root->Up->Up,c+1,i);
+            }else{
+                if(root->Coordinates.x==head->coordinates.x && head->Next!=NULL){
+                    new->Coordinates.x=head->Next->coordinates.x;
+                    new->Coordinates.y=head->Next->coordinates.y;
+                    new->Down=root;
+                    root->Up=new;
+                    if(head->Next!=NULL)
+                    AddTreeNodes(head->Next,root->Up,c+1,i);
+                }
+            }
+        }else if(head->coordinates.y>root->Coordinates.y && (head->coordinates.x==root->Coordinates.x)){
+            if(c==0 && head->coordinates.y-1==root->Coordinates.y+1){
+                new->Coordinates.x=head->coordinates.x;
+                new->Coordinates.y=head->coordinates.y-1;
+                new->Up=root;
+                root->Down=new;
+                new = (struct NodeTree*)malloc(sizeof(struct NodeTree));
+                new->Coordinates.x=head->coordinates.x;
+                new->Coordinates.y=head->coordinates.y;
+                new->Up=root->Down;
+                root->Down->Down=new;
+                AddTreeNodes(head->Next,root->Up,c+1,i);
+            }else{
+                if(root->Coordinates.x==head->coordinates.x && head->Next!=NULL){
+                    new->Coordinates.x=head->Next->coordinates.x;
+                    new->Coordinates.y=head->Next->coordinates.y;
+                    new->Up=root;
+                    root->Down=new;
+                    AddTreeNodes(head->Next,root->Up,c+1,i);
+                }
+            }
+        }
+    }
+}
+FunctionsTree Tree_AddList(Tree* self,List* pstlist,Pair Initial,char* Face){
+    int i;
+    if(self->root==NULL || self->size==0){
+        struct NodeTree *new=(struct NodeTree *)malloc(sizeof(struct NodeTree));
+        new->Coordinates.x=Initial.x;
+        new->Coordinates.y=Initial.y;
+        self->root=new;
+        self->size++;
+        self->Face=Face;
+        Tree_AddList(self,pstlist,Initial,Face);
+    }else{
+        List pnd;
+        InitializeList(&pnd);
+        for(i=0;i<6;i++){
+            List segmentedList=SegmentationList(i+1,'X',pstlist);
+            segmentedList.OrderByHigher(&segmentedList,'Y');
+            segmentedList.DeleteRepeated(&segmentedList);
+            segmentedList.Print(&segmentedList);
+            printf("\n");
+            printf("PreAdd\n");
+            AddTreeNodes(segmentedList.Head,self->root,0,i);
+            struct NodeTree* move=self->root;
+            while(move!=NULL){
+                printf("x: %d y: %d\n",move->Coordinates.x,move->Coordinates.y);
+                move=move->Up;
+            }
+            segmentedList.Head=NULL;
+        }
     }
 }
