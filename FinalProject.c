@@ -1,7 +1,6 @@
 #include<stdio.h>
 #include<stdlib.h>
 #define n 8
-#define m 6
 typedef struct Tree Tree,*FunctionsTree;
 typedef struct List List,*FunctionsList;
 typedef struct Table Table,*FunctionTable;
@@ -183,6 +182,11 @@ int** CreateFace(Table* s,int face){
             break;
     }
     return Face;
+}
+struct NodeTree* FoundRoot(struct NodeList* lst, struct NodeTree* root){
+    if(root->Up==NULL || root->Coordinates.y==lst->coordinates.y) return root;
+    else if(root!=NULL && root->Coordinates.y!=lst->coordinates.y && root->Coordinates.x!=lst->coordinates.x) return FoundRoot(lst,root->Up);
+    else if(root!=NULL && root->Coordinates.y!=lst->coordinates.y && root->Coordinates.x!=lst->coordinates.x) return FoundRoot(lst,root->Down);
 }
 void AsignTable(Table* s){
     int i,j,k;
@@ -530,6 +534,131 @@ void SwapPairElements(Pair* from,Pair* to){
     to->x=tmp.x;
     to->y=tmp.y;
 }
+void SetLeafs(struct NodeTree* root,struct NodeList* head){
+    if(head->Next==NULL || head==NULL) return;
+    struct NodeTree* new = (struct NodeTree*) malloc(sizeof(struct NodeTree));
+    new->Coordinates.x=head->coordinates.x;
+    new->Coordinates.y=head->coordinates.y;
+    if(root->Coordinates.x<=head->coordinates.x){
+        if(root->Right==NULL){
+            if(root->Coordinates.x+1==head->coordinates.x){
+                new->Left=root;
+                root->Right=new;
+                root=FoundRoot(head->Next,root);
+                SetLeafs(root,head->Next);
+            }else{
+                if(root->Coordinates.x==head->coordinates.x && root->Coordinates.y>head->coordinates.y){
+                    new->Up=root;
+                    root->Down=new;
+                }else{
+                    new->Down=root;
+                    root->Up=new;
+                }
+            }
+        }else{
+            SetLeafs(root->Right,head);
+        }
+    }else{
+        if(root->Left==NULL){
+            if(root->Coordinates.x-1==head->coordinates.x){
+                new->Right=root;
+                root->Left=new;
+                root=FoundRoot(head->Next,root);
+                SetLeafs(root,head->Next);
+            }else{
+                if(root->Coordinates.x==head->coordinates.x && root->Coordinates.y>head->coordinates.y){
+                    new->Up=root;
+                    root->Down=new;
+                }else{
+                    new->Down=root;
+                    root->Up=new;
+                }
+            }
+        }else{
+            SetLeafs(root->Left,head);
+        }
+    }
+}
+void AddTreeNodes(struct NodeList* head,struct NodeTree* root,int c,int i){
+    if(head!=NULL){
+        struct NodeTree* new= (struct NodeTree*)malloc(sizeof(struct NodeTree));
+        if(i!=0){
+            printf("\nPre:  x: %d y: %d\n",root->Coordinates.x,root->Coordinates.y);
+            root=FoundRoot(head,root);
+            printf("Post:  x: %d y: %d\n",root->Coordinates.x,root->Coordinates.y);
+            SetLeafs(root,head);
+            AddTreeNodes(head->Next,root,c+1,i+1);
+        }else if(head->coordinates.y<=root->Coordinates.y && (head->coordinates.x==root->Coordinates.x)){
+            if(c==0 && head->coordinates.y+1==root->Coordinates.y-1 && i==0){
+                new->Coordinates.x=head->coordinates.x;
+                new->Coordinates.y=head->coordinates.y+1;
+                new->Down=root;
+                root->Up=new;
+                struct NodeTree* tmp=(struct NodeTree*)malloc(sizeof(struct NodeTree));
+                tmp->Coordinates.x=head->coordinates.x;
+                tmp->Coordinates.y=head->coordinates.y;
+                tmp->Down=root->Up;
+                root->Up->Up=tmp;
+                if(head->Next!=NULL)
+                AddTreeNodes(head->Next,root->Up->Up,c+1,i);
+            }else{
+                if(root->Coordinates.x==head->coordinates.x && head->Next!=NULL){
+                    new->Coordinates.x=head->Next->coordinates.x;
+                    new->Coordinates.y=head->Next->coordinates.y;
+                    new->Down=root;
+                    root->Up=new;
+                    if(head->Next!=NULL)
+                    AddTreeNodes(head->Next,root->Up,c+1,i);
+                }
+            }
+        }else if(head->coordinates.y>root->Coordinates.y && (head->coordinates.x==root->Coordinates.x)){
+            if(c==0 && head->coordinates.y-1==root->Coordinates.y+1){
+                new->Coordinates.x=head->coordinates.x;
+                new->Coordinates.y=head->coordinates.y-1;
+                new->Up=root;
+                root->Down=new;
+                new = (struct NodeTree*)malloc(sizeof(struct NodeTree));
+                new->Coordinates.x=head->coordinates.x;
+                new->Coordinates.y=head->coordinates.y;
+                new->Up=root->Down;
+                root->Down->Down=new;
+                AddTreeNodes(head->Next,root->Up,c+1,i);
+            }else{
+                if(root->Coordinates.x==head->coordinates.x && head->Next!=NULL){
+                    new->Coordinates.x=head->Next->coordinates.x;
+                    new->Coordinates.y=head->Next->coordinates.y;
+                    new->Up=root;
+                    root->Down=new;
+                    AddTreeNodes(head->Next,root->Up,c+1,i);
+                }
+            }
+        }
+    }
+}
+List SegmentationList(int number,char coordinate,List* initialList){
+    List tmpList;
+    int i=0;
+    struct NodeList* move = initialList->Head;
+    InitializeList(&tmpList);
+    if(coordinate=='x' || coordinate=='X'){
+        for(i=0;i<initialList->Size && move->coordinates.x!=number;i++,move=move->Next);
+        while(i<initialList->Size && number==move->coordinates.x){
+            tmpList.Add(&tmpList,move->coordinates);
+            move=move->Next;
+            i++;
+        }
+    }else if(coordinate=='y' || coordinate=='Y'){
+        for(i=0;i<initialList->Size && move->coordinates.y!=number;i++,move=move->Next);
+        while(i<initialList->Size && number==move->coordinates.y){
+            tmpList.Add(&tmpList,move->coordinates);
+            move=move->Next;
+            i++;
+        }
+    }
+    if(tmpList.Size==0) return SegmentationList(number+1,coordinate,initialList);
+    move=NULL;
+    return tmpList;
+}
 FunctionsList List_Print(List* self){
     struct NodeList *move=self->Head;
     int i;
@@ -827,142 +956,7 @@ FunctionsTree Tree_ctr(Tree* self){
     self->Face=(char*)malloc(sizeof(char)*(20));
     self->size=0;
 }
-List SegmentationList(int number,char coordinate,List* initialList){
-    List tmpList;
-    int i=0;
-    struct NodeList* move = initialList->Head;
-    InitializeList(&tmpList);
-    if(coordinate=='x' || coordinate=='X'){
-        for(i=0;i<initialList->Size && move->coordinates.x!=number;i++,move=move->Next);
-        while(i<initialList->Size && number==move->coordinates.x){
-            tmpList.Add(&tmpList,move->coordinates);
-            move=move->Next;
-            i++;
-        }
-    }else if(coordinate=='y' || coordinate=='Y'){
-        for(i=0;i<initialList->Size && move->coordinates.y!=number;i++,move=move->Next);
-        while(i<initialList->Size && number==move->coordinates.y){
-            tmpList.Add(&tmpList,move->coordinates);
-            move=move->Next;
-            i++;
-        }
-    }
-    if(tmpList.Size==0) return SegmentationList(number+1,coordinate,initialList);
-    move=NULL;
-    return tmpList;
-}
-struct NodeTree* FoundRoot(struct NodeList* lst, struct NodeTree* root){
-    /*printf("\nDuring root:   x: %d y: %d\n",root->Coordinates.x,root->Coordinates.y);
-    printf("\nDuring head:   x: %d y: %d\n",lst->coordinates.x,lst->coordinates.y);*/
-    if(root->Up==NULL || root->Coordinates.y==lst->coordinates.y) return root;
-    else if(root!=NULL && root->Coordinates.y!=lst->coordinates.y && root->Coordinates.x!=lst->coordinates.x) return FoundRoot(lst,root->Up);
-    else if(root!=NULL && root->Coordinates.y!=lst->coordinates.y && root->Coordinates.x!=lst->coordinates.x) return FoundRoot(lst,root->Down);
-}
-struct NodeTree* FoundLeaf(struct NodeList* head,struct NodeTree* root){
-    printf("\nDuring root:   x: %d y: %d\n",root->Coordinates.x,root->Coordinates.y);
-    printf("\nDuring head:   x: %d y: %d\n",head->coordinates.x,head->coordinates.y);
-    if(root->Coordinates.x==head->coordinates.x) return root;
-    else if(root!=NULL && root->Coordinates.y==head->coordinates.y && root->Coordinates.x<head->coordinates.x) return FoundLeaf(head,root->Right);
-    else if(root!=NULL && root->Coordinates.y==head->coordinates.y && root->Coordinates.x>head->coordinates.x) return FoundLeaf(head,root->Left);
-}
-void SetPosLeaf(struct NodeTree* root,struct NodeList* head){
-    //check down root
-    struct NodeTree* new = (struct NodeTree*) malloc(sizeof(struct NodeTree));
-    new->Coordinates.x=head->coordinates.x;
-    new->Coordinates.y=head->coordinates.y;
-    if(root->Coordinates.x==head->coordinates.x && root->Coordinates.y+1==head->coordinates.y){
-        new->Down=root;
-        root->Up=new;
-        return;
-    }else{
-        if(root->Up!=NULL) SetPosLeaf(root->Up,head);
-    }
-}
-void SetLeafs(struct NodeTree* root,struct NodeList* head){
-    if(head->Next==NULL) return;
-    struct NodeTree* new = (struct NodeTree*) malloc(sizeof(struct NodeTree));
-    new->Coordinates.x=head->coordinates.x;
-    new->Coordinates.y=head->coordinates.y;
-    if(root->Coordinates.x<head->coordinates.x){
-        if(root->Right==NULL){
-            if(root->Coordinates.x+1==head->coordinates.x){
-                new->Left=root;
-                root->Right=new;
-                root=FoundRoot(head->Next,root);
-                SetLeafs(root,head->Next);
-            }else{
 
-            }
-            
-        }else{
-            SetLeafs(root->Right,head);
-        }
-    }else{
-        new->Right=root;
-        if(root->Left==NULL){
-            root->Left=new;
-            root=FoundRoot(head->Next,root);
-            SetLeafs(root,head->Next);
-        }else{
-            SetLeaf(root->Left,head);
-        }
-    }
-}
-void AddTreeNodes(struct NodeList* head,struct NodeTree* root,int c,int i){
-    if(head!=NULL){
-        struct NodeTree* new= (struct NodeTree*)malloc(sizeof(struct NodeTree));
-        if(i!=0){
-            printf("\nPre:  x: %d y: %d\n",root->Coordinates.x,root->Coordinates.y);
-            root=FoundRoot(head,root);
-            printf("Post:  x: %d y: %d\n",root->Coordinates.x,root->Coordinates.y);
-            SetLeafs(root,head);
-        }else if(head->coordinates.y<=root->Coordinates.y && (head->coordinates.x==root->Coordinates.x)){
-            if(c==0 && head->coordinates.y+1==root->Coordinates.y-1 && i==0){
-                new->Coordinates.x=head->coordinates.x;
-                new->Coordinates.y=head->coordinates.y+1;
-                new->Down=root;
-                root->Up=new;
-                struct NodeTree* tmp=(struct NodeTree*)malloc(sizeof(struct NodeTree));
-                tmp->Coordinates.x=head->coordinates.x;
-                tmp->Coordinates.y=head->coordinates.y;
-                tmp->Down=root->Up;
-                root->Up->Up=tmp;
-                if(head->Next!=NULL)
-                AddTreeNodes(head->Next,root->Up->Up,c+1,i);
-            }else{
-                if(root->Coordinates.x==head->coordinates.x && head->Next!=NULL){
-                    new->Coordinates.x=head->Next->coordinates.x;
-                    new->Coordinates.y=head->Next->coordinates.y;
-                    new->Down=root;
-                    root->Up=new;
-                    if(head->Next!=NULL)
-                    AddTreeNodes(head->Next,root->Up,c+1,i);
-                }
-            }
-        }else if(head->coordinates.y>root->Coordinates.y && (head->coordinates.x==root->Coordinates.x)){
-            if(c==0 && head->coordinates.y-1==root->Coordinates.y+1){
-                new->Coordinates.x=head->coordinates.x;
-                new->Coordinates.y=head->coordinates.y-1;
-                new->Up=root;
-                root->Down=new;
-                new = (struct NodeTree*)malloc(sizeof(struct NodeTree));
-                new->Coordinates.x=head->coordinates.x;
-                new->Coordinates.y=head->coordinates.y;
-                new->Up=root->Down;
-                root->Down->Down=new;
-                AddTreeNodes(head->Next,root->Up,c+1,i);
-            }else{
-                if(root->Coordinates.x==head->coordinates.x && head->Next!=NULL){
-                    new->Coordinates.x=head->Next->coordinates.x;
-                    new->Coordinates.y=head->Next->coordinates.y;
-                    new->Up=root;
-                    root->Down=new;
-                    AddTreeNodes(head->Next,root->Up,c+1,i);
-                }
-            }
-        }
-    }
-}
 FunctionsTree Tree_AddList(Tree* self,List* pstlist,Pair Initial,char* Face){
     int i;
     if(self->root==NULL || self->size==0){
