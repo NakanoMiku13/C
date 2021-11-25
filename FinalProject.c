@@ -4,6 +4,7 @@
 typedef struct Tree Tree,*FunctionsTree;
 typedef struct List List,*FunctionsList;
 typedef struct Table Table,*FunctionTable;
+typedef struct ListOfTrees ListOfTrees,*FunctionsListOfTrees;
 typedef struct Pair Pair;
 struct Pair{
     int x;
@@ -16,6 +17,17 @@ struct Node{
 struct NodeList{
     Pair coordinates;
     struct NodeList *Next;
+};
+struct NodeListTree{
+    Tree* tree;
+    struct NodeListTree* Next;
+};
+struct ListOfTrees{
+    struct NodeListTree* Head;
+    size_t size;
+    FunctionsListOfTrees (*ctr)(ListOfTrees* self),
+    (*Add)(ListOfTrees* self,Tree* tree),
+    (*PrintList)(ListOfTrees* self);
 };
 struct NodeTree{
     int value;
@@ -53,11 +65,13 @@ struct Tree{
     char* Face;
     size_t size;
     FunctionsTree (*ctr)(Tree* self),
-    (*AddList)(Tree* self,List* pstlist,Pair Initial,char* Face);
+    (*AddList)(Tree* self,List* pstlist,Pair Initial,char* Face),
+    (*PrintTree)(Tree* self);
 };
 void SearchExit(int x,int y,int** table,List* visited,List* pending,Pair* exit),
-Initialize(List*,List*,Table*,Tree*),
-SetFaces(int x,int y,int Fn,Table* table,List* visited,List* pending,Pair* exit,Tree* decisionTree);
+Initialize(List*,List*,Table*,ListOfTrees*),
+InitializeTree(Tree* self),
+SetFaces(int x,int y,int Fn,Table* table,List* visited,List* pending,Pair* exit,ListOfTrees* dTL);
 int** CreateFace(Table* table,int face);
 FunctionsList List_ctr(List* self),
 List_Add(List* self,Pair coordinates),
@@ -76,14 +90,18 @@ Table_LeftFace(Table*,int**),
 Table_TopFace(Table*,int**),
 Table_BottomFace(Table*,int**);
 FunctionsTree Tree_ctr(Tree* self),
-Tree_AddList(Tree* self,List* pstlist,Pair Initial,char* Face);
+Tree_AddList(Tree* self,List* pstlist,Pair Initial,char* Face),
+Tree_Print(Tree* self);
+FunctionsListOfTrees LOT_ctr(ListOfTrees* self),
+LOT_Print(ListOfTrees* self),
+LOT_Add(ListOfTrees* self,Tree* new);
 int main(){
     List positionList,Pending;
     Table table;
     Pair ExitCoordinates;
-    Tree decisionTree;
-    Initialize(&positionList,&Pending,&table,&decisionTree);
-    SetFaces(1,6,1,&table,&positionList,&Pending,&ExitCoordinates,&decisionTree);
+    ListOfTrees decisionTrees;
+    Initialize(&positionList,&Pending,&table,&decisionTrees);
+    SetFaces(1,6,1,&table,&positionList,&Pending,&ExitCoordinates,&decisionTrees);
     printf("x=%d y=%d",ExitCoordinates.x,ExitCoordinates.y);
 }
 void PrintFace(int** table){
@@ -96,20 +114,25 @@ void PrintFace(int** table){
     }
     printf("\n\n");
 }
-void SetFaces(int x,int y,int Fn,Table* table,List* pslst,List* pndlst,Pair* Exit,Tree* dT){
+void SetFaces(int x,int y,int Fn,Table* table,List* pslst,List* pndlst,Pair* Exit,ListOfTrees* dTL){
     int** Face;
     pslst->Clear(pslst);
     pndlst->Clear(pndlst);
     Face=CreateFace(table,Fn);
     Face[y][x]=3;
-    PrintFace(Face);
     SearchExit(y,x,Face,pslst,pndlst,Exit);
     Pair initial;
     initial.x=x;
     initial.y=y;
     pslst->OrderByLower(pslst,'X');
-    dT->AddList(dT,pslst,initial,"");
-    printf("Ini tree x: %d y: %d\n",dT->root->Coordinates.x,dT->root->Coordinates.y);
+    Tree dT;
+    InitializeTree(&dT);
+    printf("Before Create a Tree\n");
+    pslst->Print(pslst);
+    printf("Exit: x %d y %d\n",Exit->x,Exit->y);
+    dT.AddList(&dT,pslst,initial,"");
+    printf("After Create a Tree\n\n");
+    dTL->Add(dTL,&dT);
     if(Face[Exit->y][Exit->x]==5) printf("Exit Found\n");
     else{
         //Right Face
@@ -117,30 +140,30 @@ void SetFaces(int x,int y,int Fn,Table* table,List* pslst,List* pndlst,Pair* Exi
             int x=0;
             int y=Exit->y;
             Exit->x=0; Exit->y=0;
-            SetFaces(x,y,3,table,pslst,pndlst,Exit,dT);
+            SetFaces(x,y,3,table,pslst,pndlst,Exit,dTL);
         //Back Face
         }else if(Exit->x<=n && (Face[Exit->y][Exit->x]==2 || Face[Exit->y][Exit->x+1]==2) && Fn==3){
             int x=Exit->x;
             int y=Exit->y;
             Exit->x=0; Exit->y=0;
-            SetFaces(x,y,2,table,pslst,pndlst,Exit,dT);
+            SetFaces(x,y,2,table,pslst,pndlst,Exit,dTL);
         //Bottom Face
         }else if(Exit->y<=n && (Face[Exit->y][Exit->x]==2 || Face[Exit->y+1][Exit->x]==2) && Fn==2){
             int x=Exit->y;
             int y=Exit->x;
             Exit->x=0; Exit->y=0;
-            SetFaces(x,y,6,table,pslst,pndlst,Exit,dT);
+            SetFaces(x,y,6,table,pslst,pndlst,Exit,dTL);
         //Left Face
         }else if(Exit->y>=0 && (Face[Exit->y][Exit->x]==2 || Face[Exit->y-1][Exit->x]==2) && Fn>=6){
             int x=Exit->x;
             int y=n-1;
             Exit->x=0; Exit->y=0;
-            SetFaces(x,y,4,table,pslst,pndlst,Exit,dT);
+            SetFaces(x,y,4,table,pslst,pndlst,Exit,dTL);
         }else if(Fn==4){
             int x=Exit->x;
             int y=Exit->y;
             Exit->x=0; Exit->y=0;
-            SetFaces(x,y,5,table,pslst,pndlst,Exit,dT);
+            SetFaces(x,y,5,table,pslst,pndlst,Exit,dTL);
         }
     }
 }
@@ -195,7 +218,7 @@ void AsignTable(Table* s){
         {{1,1,1,1,1,1,1,1},
         {1,0,1,0,1,0,0,2},
         {1,0,0,0,0,0,1,1},
-        {1,0,1,0,1,0,1,1},   
+        {1,0,1,0,1,0,1,1},
         {1,0,0,0,0,0,0,1},
         {1,0,1,1,1,0,1,1},
         {1,3,1,0,0,0,0,1},
@@ -231,7 +254,7 @@ void AsignTable(Table* s){
         
         {{1,0,0,0,0,0,5,1},
         {0,1,1,1,1,1,1,0},
-        {1,1,1,1,1,1,1,1},
+        {0,1,1,1,1,1,1,1},
         {0,1,1,1,1,1,1,0},
         {0,1,1,1,1,1,1,1},
         {0,1,1,1,1,1,1,0},
@@ -267,7 +290,6 @@ void AsignTable(Table* s){
 
     };
     for(i=0;i<n;i++) for(j=0;j<n;j++) for(k=0;k<n;k++) s->Add(s,fill[i][j][k]);
-    //s->Print(s);
 }
 void InitializeList(List* s){
     s->ctr=List_ctr;
@@ -279,6 +301,12 @@ void InitializeList(List* s){
     s->OrderByLower=List_OrderByLower;
     s->DeleteRepeated=List_DeleteRepeated;
     s->ctr(s);
+}
+void InitializeListOfTrees(ListOfTrees* self){
+    self->ctr=LOT_ctr;
+    self->Add=LOT_Add;
+    self->PrintList=LOT_Print;
+    self->ctr(self);
 }
 void InitializeTable(Table* s){
     s->Ctr=Table_Ctr;
@@ -292,17 +320,18 @@ void InitializeTable(Table* s){
     s->BottomFace=Table_BottomFace;
     s->Ctr(s);
 }
-void InitalizeTree(Tree* s){
+void InitializeTree(Tree* s){
     s->ctr=Tree_ctr;
     s->AddList=Tree_AddList;
+    s->PrintTree=Tree_Print;
     s->ctr(s);
 }
-void Initialize(List* positionList, List* PendingPositionList,Table* table,Tree* tree){
+void Initialize(List* positionList, List* PendingPositionList,Table* table,ListOfTrees* LOT){
     InitializeList(positionList);
     InitializeList(PendingPositionList);
     InitializeTable(table);
     AsignTable(table);
-    InitalizeTree(tree);
+    InitializeListOfTrees(LOT);
 }
 void CheckLeftRight(int x,int y,int** table,List* pnd,List* visited,Pair* exit){
     Pair pending;
@@ -535,7 +564,7 @@ void SwapPairElements(Pair* from,Pair* to){
     to->y=tmp.y;
 }
 void SetLeafs(struct NodeTree* root,struct NodeList* head){
-    if(head->Next==NULL || head==NULL) return;
+    if(head->Next==NULL || head==NULL && root!=NULL) return;
     struct NodeTree* new = (struct NodeTree*) malloc(sizeof(struct NodeTree));
     new->Coordinates.x=head->coordinates.x;
     new->Coordinates.y=head->coordinates.y;
@@ -581,11 +610,13 @@ void SetLeafs(struct NodeTree* root,struct NodeList* head){
 }
 void AddTreeNodes(struct NodeList* head,struct NodeTree* root,int c,int i){
     if(head!=NULL){
+        printf("ii: %d\n",i);
         struct NodeTree* new= (struct NodeTree*)malloc(sizeof(struct NodeTree));
         if(i!=0){
-            printf("\nPre:  x: %d y: %d\n",root->Coordinates.x,root->Coordinates.y);
+            printf("Head:\nX: %d Y: %d\nRoot:\nX: %d Y: %d\n",head->coordinates.x,head->coordinates.y,root->Coordinates.x,root->Coordinates.y);
             root=FoundRoot(head,root);
-            printf("Post:  x: %d y: %d\n",root->Coordinates.x,root->Coordinates.y);
+            printf("Roots: x %d y: %d\n",root->Coordinates.x,root->Coordinates.y);
+            //Aqui
             SetLeafs(root,head);
             AddTreeNodes(head->Next,root,c+1,i+1);
         }else if(head->coordinates.y<=root->Coordinates.y && (head->coordinates.x==root->Coordinates.x)){
@@ -633,6 +664,15 @@ void AddTreeNodes(struct NodeList* head,struct NodeTree* root,int c,int i){
                 }
             }
         }
+    }
+}
+void PrintTree(struct NodeTree* root){
+    if(root!=NULL){
+        printf("\nRoot:\nX: %d Y: %d\n\n",root->Coordinates.x,root->Coordinates.y);
+        PrintTree(root->Right);
+        PrintTree(root->Left);
+        PrintTree(root->Up);
+        PrintTree(root->Down);
     }
 }
 List SegmentationList(int number,char coordinate,List* initialList){
@@ -956,9 +996,8 @@ FunctionsTree Tree_ctr(Tree* self){
     self->Face=(char*)malloc(sizeof(char)*(20));
     self->size=0;
 }
-
 FunctionsTree Tree_AddList(Tree* self,List* pstlist,Pair Initial,char* Face){
-    int i;
+    int i=0;
     if(self->root==NULL || self->size==0){
         struct NodeTree *new=(struct NodeTree *)malloc(sizeof(struct NodeTree));
         new->Coordinates.x=Initial.x;
@@ -972,18 +1011,50 @@ FunctionsTree Tree_AddList(Tree* self,List* pstlist,Pair Initial,char* Face){
         InitializeList(&pnd);
         for(i=0;i<6;i++){
             List segmentedList=SegmentationList(i+1,'X',pstlist);
+            //Necesitas enviar la lista segmentada en base a la Raiz
+            //Ya que se envia una lista artificial y no puede agregar los nodos
             segmentedList.OrderByHigher(&segmentedList,'Y');
             segmentedList.DeleteRepeated(&segmentedList);
             segmentedList.Print(&segmentedList);
-            printf("\n");
-            printf("PreAdd\n");
-            AddTreeNodes(segmentedList.Head,self->root,0,i);
             struct NodeTree* move=self->root;
-            while(move!=NULL){
+            printf("MainRoot\n");
+            while(move->Up!=NULL){
                 printf("x: %d y: %d\n",move->Coordinates.x,move->Coordinates.y);
                 move=move->Up;
             }
+            AddTreeNodes(segmentedList.Head,self->root,0,i);
             segmentedList.Head=NULL;
+        }
+    }
+}
+FunctionsTree Tree_Print(Tree* self){
+    if(self!=NULL){
+        PrintTree(self->root);
+    }
+}
+FunctionsListOfTrees LOT_ctr(ListOfTrees* self){
+    self->Head=(struct NodeListTree*)malloc(sizeof(struct NodeListTree));
+    self->size=0;
+}
+FunctionsListOfTrees LOT_Add(ListOfTrees* self,Tree* new){
+    struct NodeListTree* newNode=(struct NodeListTree*)malloc(sizeof(struct NodeListTree));
+    newNode->tree=new;
+    printf("size of list: %d\n",self->size);
+    if(self->Head==NULL && self->size==0){
+        self->Head=newNode;
+    }else{
+        struct NodeListTree* move=self->Head;
+        while(move->Next!=NULL) move=move->Next;
+        move->Next=newNode;
+    }
+    self->size++;
+}
+FunctionsListOfTrees LOT_Print(ListOfTrees* self){
+    if(self->size>0){
+        struct NodeListTree* move=self->Head;
+        int i=0;
+        for(i=0;i<self->size;i++,move=move->Next){
+            move->tree->PrintTree(move->tree);
         }
     }
 }
