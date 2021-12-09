@@ -5,6 +5,7 @@ typedef struct Tree Tree,*FunctionsTree;
 typedef struct List List,*FunctionsList;
 typedef struct Table Table,*FunctionTable;
 typedef struct ListOfTrees ListOfTrees,*FunctionsListOfTrees;
+typedef struct ListOfList ListOfList,*FunctionsLOL;
 typedef struct Pair Pair;
 struct Pair{
     int x;
@@ -22,6 +23,16 @@ struct NodeListTree{
     Tree* tree;
     struct NodeListTree* Next;
 };
+struct NodeTree{
+    int value;
+    Pair Coordinates;
+    struct NodeTree* Right,*Left,*Up,*Down;
+};
+struct NodeLOL{
+    List* list;
+    int Priority;
+    struct NodeLOL* next;
+};
 struct ListOfTrees{
     struct NodeListTree* Head;
     size_t size;
@@ -29,10 +40,13 @@ struct ListOfTrees{
     (*Add)(ListOfTrees* self,Tree* tree),
     (*PrintList)(ListOfTrees* self);
 };
-struct NodeTree{
-    int value;
-    Pair Coordinates;
-    struct NodeTree* Right,*Left,*Up,*Down;
+struct ListOfList{
+    struct NodeLOL* head;
+    size_t size;
+    FunctionsLOL (*ctr)(ListOfList* self),
+    (*Add)(ListOfList* self,List* list,int P),
+    (*Pop)(ListOfList* self,int Priority),
+    (*Clear)(ListOfList* self);
 };
 struct List{
     struct NodeList *Head;
@@ -71,6 +85,7 @@ struct Tree{
 void SearchExit(int x,int y,int** table,List* visited,List* pending,Pair* exit),
 Initialize(List*,List*,Table*,ListOfTrees*),
 InitializeTree(Tree* self),
+InitializeList(List* self),
 SetFaces(int x,int y,int Fn,Table* table,List* visited,List* pending,Pair* exit,ListOfTrees* dTL);
 int** CreateFace(Table* table,int face);
 FunctionsList List_ctr(List* self),
@@ -95,6 +110,31 @@ Tree_Print(Tree* self);
 FunctionsListOfTrees LOT_ctr(ListOfTrees* self),
 LOT_Print(ListOfTrees* self),
 LOT_Add(ListOfTrees* self,Tree* new);
+FunctionsLOL ListOfList_ctr(ListOfList* self),
+ListOfList_Add(ListOfList* self,List* new,int Priority),
+ListOfList_Pop(ListOfList* self,int Priority),
+ListOfList_Clear(ListOfList* self);
+//test main function
+/*void main(){
+    ListOfList list;
+    list.Add=ListOfList_Add;
+    list.ctr=ListOfList_ctr;
+    list.Pop=ListOfList_Pop;
+    list.Clear=ListOfList_Clear;
+    list.ctr(&list);
+    for(int i=1;i<=6;i++){
+        List lists;
+        InitializeList(&lists);
+        list.Add(&list,&lists,i);
+    }
+    list.Clear(&list);
+    struct NodeLOL* move=list.head;
+    while(move!=NULL){
+        printf("P: %d\n",move->Priority);
+        move=move->next;
+    }
+}*/
+//main main function
 int main(){
     List positionList,Pending;
     Table table;
@@ -106,7 +146,7 @@ int main(){
 }
 void PrintFace(int** table){
     int i=0,j=0;
-    for(i=0;i<n;i++){ 
+    for(i=0;i<n;i++){
         for(int j=0;j<n;j++){
             printf("%d ",table[i][j]);
         }
@@ -128,7 +168,6 @@ void SetFaces(int x,int y,int Fn,Table* table,List* pslst,List* pndlst,Pair* Exi
     Tree dT;
     InitializeTree(&dT);
     printf("Before Create a Tree\n");
-    pslst->Print(pslst);
     printf("Exit: x %d y %d\n",Exit->x,Exit->y);
     dT.AddList(&dT,pslst,initial,"");
     printf("After Create a Tree\n\n");
@@ -324,6 +363,13 @@ void InitializeTree(Tree* s){
     s->ctr=Tree_ctr;
     s->AddList=Tree_AddList;
     s->PrintTree=Tree_Print;
+    s->ctr(s);
+}
+void InitializeListOfList(ListOfList* s){
+    s->ctr=ListOfList_ctr;
+    s->Add=ListOfList_Add;
+    s->Clear=ListOfList_Clear;
+    s->Pop=ListOfList_Pop;
     s->ctr(s);
 }
 void Initialize(List* positionList, List* PendingPositionList,Table* table,ListOfTrees* LOT){
@@ -1007,9 +1053,29 @@ FunctionsTree Tree_AddList(Tree* self,List* pstlist,Pair Initial,char* Face){
         self->Face=Face;
         Tree_AddList(self,pstlist,Initial,Face);
     }else{
-        List pnd;
-        InitializeList(&pnd);
-        for(i=0;i<6;i++){
+        ListOfList list;
+        InitializeListOfList(&list);
+        for(int i=Initial.x;i<n;i++){
+            List segmentedList=SegmentationList(i,'X',pstlist);
+            segmentedList.OrderByHigher(&segmentedList,'Y');
+            segmentedList.DeleteRepeated(&segmentedList);
+            list.Add(&list,&segmentedList,i);
+        }
+        for(int i=Initial.x;i>0;i--){
+            List segmentedList=SegmentationList(i,'X',pstlist);
+            segmentedList.OrderByHigher(&segmentedList,'Y');
+            segmentedList.DeleteRepeated(&segmentedList);
+            list.Add(&list,&segmentedList,i);
+        }
+        for(int i=0;i<list.size;i++){
+            printf("List: %d\n",i+1);
+            List* tmp=list.head->list;
+            printf("Printing List: \n");
+            tmp->Print(tmp);
+            printf("\n\n");
+            list.head=list.head->next;
+        }
+        /*for(i=0;i<6;i++){
             List segmentedList=SegmentationList(i+1,'X',pstlist);
             //Necesitas enviar la lista segmentada en base a la Raiz
             //Ya que se envia una lista artificial y no puede agregar los nodos
@@ -1024,7 +1090,7 @@ FunctionsTree Tree_AddList(Tree* self,List* pstlist,Pair Initial,char* Face){
             }
             AddTreeNodes(segmentedList.Head,self->root,0,i);
             segmentedList.Head=NULL;
-        }
+        }*/
     }
 }
 FunctionsTree Tree_Print(Tree* self){
@@ -1055,6 +1121,57 @@ FunctionsListOfTrees LOT_Print(ListOfTrees* self){
         int i=0;
         for(i=0;i<self->size;i++,move=move->Next){
             move->tree->PrintTree(move->tree);
+        }
+    }
+}
+FunctionsLOL ListOfList_ctr(ListOfList* self){
+    self->head=(struct NodeLOL*)malloc(sizeof(struct NodeLOL));
+    self->size=0;
+}
+FunctionsLOL ListOfList_Add(ListOfList* self, List* new,int Priority){
+    struct NodeLOL* newNode=(struct NodeLOL*)malloc(sizeof(struct NodeLOL));
+    newNode->list=new;
+    newNode->Priority=Priority;
+    if(self->size==0){
+        self->head=newNode;
+    }else{
+        struct NodeLOL* move=self->head;
+        int i=0;
+        for(i=0;i<self->size-1;i++,move=move->next);
+        move->next=newNode;
+    }
+    self->size++;
+}
+FunctionsLOL ListOfList_Pop(ListOfList* self,const int Priority){
+    if(self->size>0){
+        if(Priority==self->head->Priority){
+            struct NodeLOL* tmp=self->head;
+            self->head=tmp->next;
+            tmp=NULL;
+        }else{
+            struct NodeLOL* move=self->head;
+            while(move->next->Priority!=Priority) move=move->next;
+            if(move->next->Priority==Priority){
+                struct NodeLOL* tmp=move->next;
+                if(move->next!=NULL) move->next=tmp->next;
+                else move->next=NULL;
+            }
+        }
+        self->size--;
+    }
+}
+FunctionsLOL ListOfList_Clear(ListOfList* self){
+    if(self->size>0){
+        if(self->size==1){
+            self->head=NULL;
+            self->size--;
+        }else{
+            int i;
+            struct NodeLOL* move=self->head;
+            for(i=0;i<self->size-1;i++,move=move->next);
+            move->next=NULL;
+            self->size--;
+            ListOfList_Clear(self);
         }
     }
 }

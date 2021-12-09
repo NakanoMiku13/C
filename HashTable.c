@@ -20,9 +20,9 @@ f ht_ctr(ht* self){
 n* gHD(int v){
     n* new=(n*)malloc(sizeof(n));
     new->hash=(char*)malloc(sizeof(char)*152);
-    char* d="abcdef";/*ghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!/()=;:.";*/
+    char* d="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!/()=;:.";
     int i=0;
-    for(i=0;i<2;i++) new->hash[i]=d[rand()%8];
+    for(i=0;i<50;i++) new->hash[i]=d[rand()%72];
     new->v=v;
     return new;
 }
@@ -54,9 +54,9 @@ int main(){
     hastTable.Add=ht_Add;
     hastTable.ctr(&hastTable);
     srand(time(NULL));
-    for(int i=0;i<10000;i++){
+    for(int i=0;i<100000;i++){
         n* new=gHD(rand()%150000);
         hastTable.Add(&hastTable,new);
+        printf("i: %d\n",i);
     }
-    printf("Repeated: %d",CountRepeated(&hastTable));
 }
