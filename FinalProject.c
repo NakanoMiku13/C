@@ -167,11 +167,6 @@ void SetFaces(int x,int y,int Fn,Table* table,List* pslst,List* pndlst,Pair* Exi
     pslst->OrderByLower(pslst,'X');
     Tree dT;
     InitializeTree(&dT);
-    printf("Before Create a Tree\n");
-    printf("Exit: x %d y %d\n",Exit->x,Exit->y);
-    dT.AddList(&dT,pslst,initial,"");
-    printf("After Create a Tree\n\n");
-    dTL->Add(dTL,&dT);
     if(Face[Exit->y][Exit->x]==5) printf("Exit Found\n");
     else{
         //Right Face
