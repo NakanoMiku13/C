@@ -1,5 +1,6 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<time.h>
 typedef struct Queue Queue,*Function;
 typedef struct Node Node;
 struct Node{
@@ -47,14 +48,17 @@ Function Print(Queue* s){
         }
     }
 }
+
 int main(){
-    Queue f;
-    f.ctr=ctr;
-    f.Push=Push;
-    f.Pop=Pop;
-    f.Print=Print;
-    f.ctr(&f);
-    f.Push(&f,1);
-    f.Push(&f,2);
-    f.Push(&f,3);
+    srand(time(0));
+    int clientes = 10 + rand()%50,i=0,tiempos[]={10,20,30,40,50};
+    for(i=0;i<clientes;i++){
+        
+    }
+    Queue fila1,fila2,fila3;
+    fila1.ctr=fila2.ctr=fila3.ctr=ctr;
+    fila1.Push=fila3.Push=fila3.Push=Push;
+    fila1.Pop=fila2.Pop=fila3.Pop=Pop;
+    fila1.Print=fila2.Print=fila3.Print=Print;
+    
 }
