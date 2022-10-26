@@ -1,6 +1,8 @@
+#include<stdlib.h>
 #include<stdio.h>
 #include<stdlib.h>
 #include<time.h>
+#include<windows.h>
 typedef struct Queue Queue,*Function;
 typedef struct Node Node;
 struct Node{
@@ -13,6 +15,41 @@ struct Queue{
     size_t size;
     Function (*ctr)(Queue* s),(*Push)(Queue* s,int x),(*Pop)(Queue* s),(*Print)(Queue* s);
 };
+Function ctr(Queue* s),Push(Queue* s,int x),Pop(Queue* s),Print(Queue* s);
+Queue newQueue();
+int main(){
+    srand(time(NULL));
+    char* nom = (char*)malloc(sizeof(char)*150);
+	int cajeras=0,tiempoLlegada=0,i=0;
+    int* tiempo=(int*)malloc(sizeof(int)*15);
+    Queue caja1=newQueue(),caja2=newQueue(),caja3=newQueue();
+	scanf("%s",nom);
+	scanf("%d",&cajeras);
+	for(i=0;i<cajeras;i++){
+        int x=0;
+		scanf("%d",&x);
+        tiempo[i]=x;
+	}
+    int tiempos[]={10,20,30,40,50},atendidos=0,contador=1;
+    while(1){
+        if(atendidos>10 && caja1.size>0 && caja2.size>0 && caja3.size>0){
+            return 0;
+        }else{
+            //cliente nuevo
+            if(caja1.size==0){
+                caja1.Push(&caja1,contador);
+            }else if(caja2.size==0){
+                caja2.Push(&caja2,contador);
+            }else if(caja3.size==0){
+                caja3.Push(&caja3,contador);
+            }else{
+                caja1.Push(&caja1,contador);
+            }
+        }
+        
+        atendidos++;
+    }
+}
 Function ctr(Queue* s){
     s->head=s->back=(Node*)malloc(sizeof(Node));
     s->size=0;
@@ -48,17 +85,11 @@ Function Print(Queue* s){
         }
     }
 }
-
-int main(){
-    srand(time(0));
-    int clientes = 10 + rand()%50,i=0,tiempos[]={10,20,30,40,50};
-    for(i=0;i<clientes;i++){
-        
-    }
-    Queue fila1,fila2,fila3;
-    fila1.ctr=fila2.ctr=fila3.ctr=ctr;
-    fila1.Push=fila3.Push=fila3.Push=Push;
-    fila1.Pop=fila2.Pop=fila3.Pop=Pop;
-    fila1.Print=fila2.Print=fila3.Print=Print;
-    
+Queue newQueue(){
+    Queue new;
+    new.ctr=ctr;
+    new.Push=Push;
+    new.Pop=Pop;
+    new.Print=Print;
+    return new;
 }
