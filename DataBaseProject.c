@@ -32,7 +32,7 @@ struct StrongEntity{
 };
 struct WeakEntity{
     string name;
-    StrongEntity* father;
+    StrongEntity father;
     size_t attrCount;
     Attributes* attributes;
     char relation;
@@ -81,10 +81,20 @@ Pair phaseOneAndTwo(Entity* entities, const size_t size){
     return pair;
 }
 Pair getFather(stEnt* st, wkEnt* wk){
-    
-}
-Pair getRelations(Pair entities){
-
+    Pair ret;
+    for(int i = 0 ; i < wkc ; i++){
+        WeakEntity entity = wk[i];
+        for(int j = 0 ; j < stc ; j++){
+            StrongEntity stE = st[0];
+            if(strcmp(entity.r,stE.name)==0){
+                wk[i].father = st[j];
+                j = stc;
+            }
+        }
+    }
+    for(int i = 0 ; i < stc ; i++) ret.strong[i] = st[i];
+    for(int i = 0 ; i < wkc ; i++) ret.weak[i] = wk[i];
+    return ret;
 }
 int main(){
     int entitiesCount;
@@ -134,6 +144,6 @@ int main(){
         entities[i] = entity;
     }
     Pair pr = phaseOneAndTwo(entities,entitiesCount);
+    pr = getFather(pr.strong,pr.weak);
     
-    printf("%s",pr.strong[0].name);
 }
